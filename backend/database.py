@@ -43,7 +43,6 @@ if DATABASE_NAME is None:
 
 DATABASE_URL = f"postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{int(DATABASE_PORT)}/{DATABASE_NAME}"
 
-print(DATABASE_URL)
 
 engine = create_engine(DATABASE_URL)
 
