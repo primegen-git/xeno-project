@@ -5,14 +5,15 @@ from sqlalchemy.orm import Session
 import models
 from typing import AsyncGenerator
 from database import SessionLocal, engine, get_db
+from webhooks.customer import router as customer_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    print("Creating database tables...")
+    # print("Creating database tables...")
     models.Base.metadata.create_all(bind=engine)
     yield
-    print("Shutting down...")
+    # print("Shutting down...")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -30,3 +31,6 @@ async def check_database(db: Session = Depends(get_db)):
     if result is None:
         return {"message": "no message exist"}
     return {"id": result.id, "message": result.message}
+
+
+app.include_router(customer_router, prefix="/webhooks/customer", tags=["customer"])
