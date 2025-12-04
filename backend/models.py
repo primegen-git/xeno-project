@@ -29,7 +29,7 @@ class Tenant(Base):
         passive_deletes=True,
     )
 
-    product: List[Mapped["Product"]] = relationship(
+    product: Mapped[List["Product"]] = relationship(
         "Product",
         back_populates="tenant",
         uselist=True,
@@ -37,7 +37,7 @@ class Tenant(Base):
         passive_deletes=True,
     )
 
-    customer: List[Mapped["Customer"]] = relationship(
+    customer: Mapped[List["Customer"]] = relationship(
         "Customer",
         back_populates="tenant",
         uselist=True,
@@ -77,7 +77,7 @@ class Product(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="product")
 
-    variant: List[Mapped["Variant"]] = relationship(
+    variant: Mapped[List["Variant"]] = relationship(
         "Variant",
         uselist=True,
         back_populates="product",
@@ -111,7 +111,7 @@ class Customer(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
-    address: List[Mapped["Address"]] = relationship(
+    address: Mapped[List["Address"]] = relationship(
         "Address",
         uselist=True,
         cascade="all, delete-orphan",
