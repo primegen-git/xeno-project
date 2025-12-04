@@ -8,4 +8,5 @@ router = APIRouter()
 @router.post("/create")
 async def create_customer(req: Request):
     print(req)
-    return {"msg", "customer_create_request"}
+    req_msg = json.dumps(req)
+    return {"msg", req_msg}
