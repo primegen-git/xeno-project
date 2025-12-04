@@ -73,7 +73,7 @@ class Product(Base):
     vendor: Mapped[str] = mapped_column()
     product_type: Mapped[str] = mapped_column()
     tags: Mapped[str] = mapped_column()
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants", ondelete="CASCADE"))
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="product")
 
@@ -94,7 +94,9 @@ class Variant(Base):
     price: Mapped[float] = mapped_column(default=0.0)
     sku: Mapped[str] = mapped_column()
     quantity: Mapped[str] = mapped_column()
-    product_id: Mapped[int] = mapped_column(ForeignKey("products", ondelete="CASCADE"))
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE")
+    )
 
     product: Mapped["Product"] = relationship("Product", back_populates="variant")
 
@@ -107,7 +109,7 @@ class Customer(Base):
     last_name: Mapped[str] = mapped_column()
     email: Mapped[str] = mapped_column()
     verified_email: Mapped[bool] = mapped_column(default=False)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants", ondelete="CASCADE"))
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
@@ -130,7 +132,7 @@ class Address(Base):
     zip: Mapped[int] = mapped_column()
     country: Mapped[str] = mapped_column()
     customer_id: Mapped[int] = mapped_column(
-        ForeignKey("customers", ondelete="CASCADE")
+        ForeignKey("customers.id", ondelete="CASCADE")
     )
 
     customer: Mapped["Customer"] = relationship("Customer", back_populates="address")
