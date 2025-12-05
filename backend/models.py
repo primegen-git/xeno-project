@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 from database import Base, engine
 from typing import List
@@ -69,7 +69,7 @@ class Tenant(Base):
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     title: Mapped[str] = mapped_column()
     vendor: Mapped[str] = mapped_column()
     product_type: Mapped[str] = mapped_column()
@@ -90,7 +90,7 @@ class Product(Base):
 class Variant(Base):
     __tablename__ = "variants"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     options: Mapped[str] = mapped_column()
     price: Mapped[float] = mapped_column(default=0.0)
     sku: Mapped[str] = mapped_column()
@@ -105,7 +105,7 @@ class Variant(Base):
 class Customer(Base):
     __tablename__ = "customers"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     first_name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()
     email: Mapped[str] = mapped_column()
@@ -114,7 +114,7 @@ class Customer(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
-    address: Mapped[List["Address"]] = relationship(
+    addresses: Mapped[List["Address"]] = relationship(
         "Address",
         uselist=True,
         cascade="all, delete-orphan",
@@ -126,7 +126,7 @@ class Customer(Base):
 class Address(Base):
     __tablename__ = "addresses"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     address1: Mapped[str] = mapped_column()
     city: Mapped[str] = mapped_column()
     province: Mapped[str] = mapped_column()
@@ -136,4 +136,4 @@ class Address(Base):
         ForeignKey("customers.id", ondelete="CASCADE")
     )
 
-    customer: Mapped["Customer"] = relationship("Customer", back_populates="address")
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="addresses")
