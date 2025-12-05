@@ -68,10 +68,9 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
             existing_tenant.access_token = access_token
             tenant_id = existing_tenant.id
         else:
-            print("kj Creating new tenant...")
             new_tenant = models.Tenant(shop=shop, access_token=access_token)
             db.add(new_tenant)
-            db.commit()  # Commit to generate the ID
+            db.commit()
             db.refresh(new_tenant)
             tenant_id = new_tenant.id
 
@@ -79,7 +78,9 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
 
         jwt_payload = {"tenant_id": tenant_id, "access_token": access_token}
         encoded_jwt = create_jwt_token(jwt_payload)
-        res.set_cookie(key="token", value=encoded_jwt, httponly=True)
+        res.set_cookie(
+            key="token", value=encoded_jwt, httponly=True, samesite=None, secure=True
+        )
 
         return {"success": True, "message": "App Re-installed & Token Updated"}
 
