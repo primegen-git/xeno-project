@@ -56,7 +56,7 @@ class CustomerProductModel(BaseModel):
 class OrderModel(BaseModel):
     id: int
     customer: CustomerProductModel
-    list_items: List[OrderProductModel]
+    line_items: List[OrderProductModel]
 
 
 class OrderResponseModel(BaseModel):
