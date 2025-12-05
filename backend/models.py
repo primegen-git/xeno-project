@@ -127,3 +127,5 @@ class Order(Base):
     customer_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("customers.id"))
 
     variant_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("variants.id"))
+
+    quantity: Mapped[int] = mapped_column()
