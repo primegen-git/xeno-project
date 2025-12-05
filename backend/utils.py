@@ -10,7 +10,7 @@ from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from database import get_db
 import models
-from pydantic_models import CustomerResponse
+from pydantic_models import CustomerResponse, ProductResponse
 
 
 load_dotenv()
@@ -75,11 +75,11 @@ def fetch_data_from_shopify(shop, resource, access_token):
 
             data = response.json()
 
-            parsed_data = []
             if resource == "customers":
-                parsed_data = CustomerResponse(**data)
+                shopify_data.extend(CustomerResponse(**data).customers)
 
-            shopify_data.extend(parsed_data.customers)
+            elif resource == "products":
+                shopify_data.extend(ProductResponse(**data).products)
 
             if "link" in response.headers:
                 parts = response.headers["link"].split(",")
