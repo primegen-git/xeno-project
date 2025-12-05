@@ -38,7 +38,7 @@ class ProductModel(BaseModel):
     vendor: str
     product_type: str
     tags: bool
-    variant: List[VariantModel]
+    variants: List[VariantModel]
 
 
 class ProductResponsse(BaseModel):
