@@ -54,6 +54,7 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
     payload = {"client_id": CLIENT_ID, "client_secret": CLIENT_ACCESS_KEY, "code": code}
 
     try:
+        is_user_exist = False
         response = requests.post(url=token_url, json=payload)
         response.raise_for_status()
         data = response.json()
@@ -67,6 +68,7 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
         if existing_tenant:
             existing_tenant.access_token = access_token
             tenant_id = existing_tenant.id
+            is_user_exist = True
         else:
             new_tenant = models.Tenant(shop=shop, access_token=access_token)
             db.add(new_tenant)
@@ -78,11 +80,13 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
 
         jwt_payload = {"tenant_id": tenant_id, "access_token": access_token}
         encoded_jwt = create_jwt_token(jwt_payload)
-        res.set_cookie(
+        response = RedirectResponse(
+            url=f"http://localhost:3000/post-auth?is_user_exist={is_user_exist}"
+        )
+        response.set_cookie(
             key="token", value=encoded_jwt, httponly=True, samesite="none", secure=True
         )
-
-        return {"success": True, "message": "App Re-installed & Token Updated"}
+        return response
 
     except Exception as e:
         print(f"Callback Error: {e}")
