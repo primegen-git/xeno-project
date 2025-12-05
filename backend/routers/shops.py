@@ -79,7 +79,7 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
         jwt_payload = {"tenant_id": tenant_id, "access_token": access_token}
         encoded_jwt = create_jwt_token(jwt_payload)
         res.set_cookie(
-            key="token", value=encoded_jwt, httponly=True, samesite=None, secure=True
+            key="token", value=encoded_jwt, httponly=True, samesite="none", secure=True
         )
 
         return {"success": True, "message": "App Re-installed & Token Updated"}
