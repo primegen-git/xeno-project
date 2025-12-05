@@ -21,14 +21,6 @@ class Tenant(Base):
     shop: Mapped[str] = mapped_column(unique=True, nullable=False)
     access_token: Mapped[str] = mapped_column(unique=True, nullable=False)
 
-    # owner: Mapped["Owner"] = relationship(
-    #     "Owner",
-    #     back_populates="tenant",
-    #     uselist=False,
-    #     cascade="all, delete-orphan",
-    #     passive_deletes=True,
-    # )
-
     product: Mapped[List["Product"]] = relationship(
         "Product",
         back_populates="tenant",
@@ -44,26 +36,6 @@ class Tenant(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-
-
-# class Owner(Base):
-#     __tablename__ = "owners"
-#
-#     id: Mapped[int] = mapped_column(primary_key=True, index=True, autoincrement=True)
-#     email: Mapped[str] = mapped_column(unique=True, nullable=False)
-#     hashed_password: Mapped[str] = mapped_column(nullable=False)
-#
-#     tenant_id: Mapped[int] = mapped_column(
-#         ForeignKey("tenants.id", ondelete="CASCADE"),
-#         unique=True,
-#         nullable=False,
-#     )
-#
-#     tenant: Mapped["Tenant"] = relationship(
-#         "Tenant",
-#         back_populates="owner",
-#     )
-#
 
 
 class Product(Base):
@@ -86,14 +58,6 @@ class Product(Base):
         back_populates="product",
         cascade="all, delete-orphan",
         passive_deletes=True,
-    )
-
-    orders: Mapped[List["Orders"]] = relationship(
-        "Orders",
-        uselist=True,
-        passive_deletes=True,
-        cascade="all, delete-orphan",
-        back_populates="product",
     )
 
 
@@ -134,14 +98,6 @@ class Customer(Base):
         back_populates="customer",
     )
 
-    orders: Mapped[List["Orders"]] = relationship(
-        "Orders",
-        uselist=True,
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        back_populates="customer",
-    )
-
 
 class Address(Base):
     __tablename__ = "addresses"
@@ -164,26 +120,10 @@ class Orders(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
-    customer_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("customers.id"), ondelete="CASCADE"
+    tenant_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("tenant.id"), ondelete="CASCADE"
     )
 
-    product_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("products.id"), ondelete="CASCADE"
-    )
+    customer_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("customers.id"))
 
-    customer: Mapped["Customer"] = relationship(
-        "Customer",
-        uselist=False,
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        back_populates="orders",
-    )
-
-    product: Mapped["Product"] = relationship(
-        "Product",
-        uselist=False,
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-        back_populates="orders",
-    )
+    variant_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("variants.id"))
