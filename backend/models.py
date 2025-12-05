@@ -121,7 +121,7 @@ class Order(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
     tenant_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("tenant.id"), ondelete="CASCADE"
+        BigInteger, ForeignKey("tenants.id", ondelete="CASCADE")
     )
 
     customer_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("customers.id"))
