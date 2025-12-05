@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
 
 
 class AddressModel(BaseModel):
@@ -22,3 +22,24 @@ class CustomerModel(BaseModel):
 
 class CustomerResponse(BaseModel):
     customers: List[CustomerModel]
+
+
+class VariantModel(BaseModel):
+    id: int
+    options: str
+    price: float
+    ski: str
+    quantity: int
+
+
+class ProductModel(BaseModel):
+    id: int
+    title: str
+    vendor: str
+    product_type: str
+    tags: bool
+    variant: List[VariantModel]
+
+
+class ProductResponsse(BaseModel):
+    products: List[ProductModel]
