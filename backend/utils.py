@@ -1,6 +1,5 @@
 import os
 import time
-import sys
 from typing import Dict
 import jwt
 from dotenv import load_dotenv
@@ -11,6 +10,7 @@ from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from database import get_db
 import models
+from pydantic_models import CustomerResponse
 
 
 load_dotenv()
@@ -20,14 +20,14 @@ JWT_SECRET = os.getenv("JWT_SECRET", None)
 
 if JWT_SECRET is None:
     print("jwt secret does not exist")
-    sys.exit(1)
+    raise HTTPException(detail="JWT Secret is Unknown", status_code=500)
 
 
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", None)
 
 if JWT_ALGORITHM is None:
     print("jwt algorithm does not exist")
-    sys.exit(1)
+    raise HTTPException(detail="JWT Algorithm is Unknown", status_code=500)
 
 
 def create_jwt_token(payload: Dict):
@@ -35,8 +35,8 @@ def create_jwt_token(payload: Dict):
     return encoded_jwt
 
 
-def decode_jwt_token(jwt):
-    payload = jwt.decode(jwt, key=JWT_SECRET, algorithms=JWT_ALGORITHM)
+def decode_jwt_token(encoded_jwt):
+    payload = jwt.decode(encoded_jwt, key=JWT_SECRET, algorithms=JWT_ALGORITHM)
     return payload
 
 
@@ -51,15 +51,13 @@ def get_access_token(shop, db: Session = Depends(get_db)):
     return access_token
 
 
-def fetch_data_from_shopify(shop, resource):
-    access_token = requests.get(shop)
-
+def fetch_data_from_shopify(shop, resource, access_token):
     headers = {
         "Content-Type": "application/json",
         "X-Shopify-Access-Token": access_token,
     }
 
-    url = f"https://{shop}/admin/2024-10/{resource}.json"
+    url = f"https://{shop}/admin/api/2024-10/{resource}.json"
 
     shopify_data = []
 
@@ -77,7 +75,11 @@ def fetch_data_from_shopify(shop, resource):
 
             data = response.json()
 
-            shopify_data.extend(data.get(resource, []))
+            parsed_data = []
+            if resource == "customers":
+                parsed_data = CustomerResponse(**data)
+
+            shopify_data.extend(parsed_data.customers)
 
             if "link" in response.headers:
                 parts = response.headers["link"].split(",")
@@ -95,10 +97,9 @@ def fetch_data_from_shopify(shop, resource):
         except Exception as e:
             print("Error occurs during customer data sync from shopify")
             print(f"Error : {e}")
-            sys.exit(1)
+            raise HTTPException(
+                detail="Error Occur in customer sync process from shopify",
+                status_code=500,
+            )
 
     return shopify_data
-
-
-def save_to_database(shop, data, db: Session = Depends(get_db)):
-    pass
