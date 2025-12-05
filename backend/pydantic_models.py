@@ -43,3 +43,21 @@ class ProductModel(BaseModel):
 
 class ProductResponse(BaseModel):
     products: List[ProductModel]
+
+
+class OrderProductModel(BaseModel):
+    variant_id: int
+
+
+class CustomerProductModel(BaseModel):
+    id: int
+
+
+class OrderModel(BaseModel):
+    id: int
+    customer: CustomerProductModel
+    list_items: List[OrderProductModel]
+
+
+class OrderResponseModel(BaseModel):
+    orders: List[OrderModel]
