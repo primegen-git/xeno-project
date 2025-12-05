@@ -68,7 +68,7 @@ class Variant(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     option1: Mapped[str] = mapped_column()
     price: Mapped[float] = mapped_column(default=0.0)
-    sku: Mapped[str] = mapped_column(default="")
+    sku: Mapped[str] = mapped_column()
     inventory_quantity: Mapped[int] = mapped_column()
     product_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("products.id", ondelete="CASCADE")
