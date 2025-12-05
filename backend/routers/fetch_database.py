@@ -51,7 +51,7 @@ async def get_total_products(req: Request, db: Session = Depends(get_db)):
     return JSONResponse(content=total_products, status_code=200)
 
 
-@router.get("/total_products")
+@router.get("/total_orders")
 async def get_total_orders(req: Request, db: Session = Depends(get_db)):
     tenant_id, _ = get_tenent_id_and_access_token(req)
 
