@@ -126,7 +126,7 @@ class Customer(Base):
 class Address(Base):
     __tablename__ = "addresses"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     address1: Mapped[str] = mapped_column()
     city: Mapped[str] = mapped_column()
     province: Mapped[str] = mapped_column()
