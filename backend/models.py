@@ -78,7 +78,7 @@ class Product(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="product")
 
-    variant: Mapped[List["Variant"]] = relationship(
+    variants: Mapped[List["Variant"]] = relationship(
         "Variant",
         uselist=True,
         back_populates="product",
@@ -91,15 +91,15 @@ class Variant(Base):
     __tablename__ = "variants"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    options: Mapped[str] = mapped_column()
+    option1: Mapped[str] = mapped_column()
     price: Mapped[float] = mapped_column(default=0.0)
-    sku: Mapped[str] = mapped_column()
-    quantity: Mapped[str] = mapped_column()
+    sku: Mapped[str] = mapped_column(default="")
+    inventory_quantity: Mapped[int] = mapped_column()
     product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id", ondelete="CASCADE")
     )
 
-    product: Mapped["Product"] = relationship("Product", back_populates="variant")
+    product: Mapped["Product"] = relationship("Product", back_populates="variants")
 
 
 class Customer(Base):
