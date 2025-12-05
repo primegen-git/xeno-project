@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 from database import engine, get_db
 from routers.shops import router as shops_router
 from routers.shopify_sync import router as shopify_sync_router
+from routers.fetch_database import router as fetch_database_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -18,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan)
 
-origins = ["http://localhost:8080"]
+origins = ["http://localhost:8080", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,3 +46,4 @@ async def check_database(db: Session = Depends(get_db)):
 
 app.include_router(router=shops_router, prefix="/shops", tags=["shops"])
 app.include_router(router=shopify_sync_router, prefix="/sync", tags=["shops"])
+app.include_router(router=fetch_database_router, prefix="/fetch", tags=["shops"])
