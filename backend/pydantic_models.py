@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from datetime import datetime
 
 
 class AddressModel(BaseModel):
@@ -47,10 +48,12 @@ class ProductResponse(BaseModel):
 
 class OrderProductModel(BaseModel):
     variant_id: int
+    quantity: int
 
 
 class CustomerProductModel(BaseModel):
     id: int
+    created_at: datetime
 
 
 class OrderModel(BaseModel):
