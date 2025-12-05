@@ -53,13 +53,13 @@ class OrderProductModel(BaseModel):
 
 class CustomerProductModel(BaseModel):
     id: int
-    created_at: datetime
 
 
 class OrderModel(BaseModel):
     id: int
     customer: CustomerProductModel
     line_items: List[OrderProductModel]
+    created_at: datetime
 
 
 class OrderResponseModel(BaseModel):
