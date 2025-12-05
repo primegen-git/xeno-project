@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <!-- <link href="css/style.css" rel="stylesheet"> -->
+    <script>
+    const shop = "dev-xeno-store-2.myshopify.com";
+      function install() {
+        // Let the browser do a normal navigation to your backend endpoint
+        // window.location.href = `https://xeno-project-psi.vercel.app/shops/install?shop=${shop}`;
+        window.location.href = `https://xeno-project-psi.vercel.app/shops/install?shop=${shop}`;
+      }
+
+      async function customers() {
+        const res = await fetch(`https://xeno-project-psi.vercel.app/sync/customers?shop=${shop}`, {
+          method: "GET",
+          credentials: "include"  // ⭐ cookies go with the request
+        });
+
+        const data = await res.json();
+        console.log(data);
+
+      }
+
+      async function products() {
+        res = await fetch(`https://xeno-project-psi.vercel.app/sync/products?shop=${shop}`, {
+          method: "GET",
+          credentials: "include"  // ⭐ cookies go with the request
+        });
+
+        data = await res.json();
+        console.log(data);
+
+      }
+
+      async function orders() {
+        res = await fetch(`https://xeno-project-psi.vercel.app/sync/orders?shop=${shop}`, {
+          method: "GET",
+          credentials: "include"  // ⭐ cookies go with the request
+        });
+
+        data = await res.json();
+        console.log(data);
+
+      }
+    </script>
+  </head>
+  <body>
+    <button id="install" onclick="install()">install</button>
+    <button id="customers" onclick="customers()">customers</button>
+    <button id="products" onclick="products()">products</button>
+    <button id="orders" onclick="orders()">orders</button>
+  </body>
+</html>
