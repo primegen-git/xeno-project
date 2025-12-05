@@ -140,3 +140,35 @@ async def get_products(req: Request, shop: str, db: Session = Depends(get_db)):
     db.commit()
 
     return Response(content="Product Sync Successfully", status_code=200)
+
+
+@router.get("/orders")
+async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
+    tenant_id, access_token = get_tenant_id(req)
+
+    if tenant_id is None:
+        raise HTTPException(status_code=500, detail="Internal Server Error.")
+
+    orders = fetch_data_from_shopify(shop, "orders", access_token)
+
+    for order in orders:
+        db_order = db.get(models.Order, order.id)
+
+        if db_order:
+            db_order.tenant_id = tenant_id
+            db_order.customer_id = order.customer.id
+            db_order.variant_id = order.list_items[0].variant_id
+
+        else:
+            order_model = models.Order(
+                id=order.id,
+                tenant_id=tenant_id,
+                customer_id=order.customer.id,
+                variant_id=order.list_items[0].variant_id,
+            )
+
+            db.add(order_model)
+
+    db.commit()
+
+    return Response(content="Orders Sync Successfully", status_code=200)
