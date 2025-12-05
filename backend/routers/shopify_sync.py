@@ -157,14 +157,14 @@ async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
         if db_order:
             db_order.tenant_id = tenant_id
             db_order.customer_id = order.customer.id
-            db_order.variant_id = order.list_items[0].variant_id
+            db_order.variant_id = order.line_items[0].variant_id
 
         else:
             order_model = models.Order(
                 id=order.id,
                 tenant_id=tenant_id,
                 customer_id=order.customer.id,
-                variant_id=order.list_items[0].variant_id,
+                variant_id=order.line_items[0].variant_id,
             )
 
             db.add(order_model)
