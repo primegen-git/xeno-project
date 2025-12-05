@@ -115,7 +115,7 @@ class Address(Base):
     customer: Mapped["Customer"] = relationship("Customer", back_populates="addresses")
 
 
-class Orders(Base):
+class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
