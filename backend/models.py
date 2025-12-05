@@ -1,7 +1,8 @@
-from sqlalchemy import BigInteger, ForeignKey
+from sqlalchemy import BigInteger, ForeignKey, DateTime
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 from database import Base, engine
 from typing import List
+from datetime import datetime
 
 
 def create_db_and_tables():
@@ -129,3 +130,9 @@ class Order(Base):
     variant_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("variants.id"))
 
     quantity: Mapped[int] = mapped_column()
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        index=True,
+        nullable=False,
+    )
