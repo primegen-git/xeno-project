@@ -160,6 +160,7 @@ async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
             db_order.customer_id = order.customer.id
             db_order.variant_id = order.line_items[0].variant_id
             db_order.created_at = order.created_at.astimezone(timezone.utc)
+            quantity = order.line_items[0].quantity
 
         else:
             order_model = models.Order(
@@ -168,6 +169,7 @@ async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
                 customer_id=order.customer.id,
                 variant_id=order.line_items[0].variant_id,
                 created_at=order.created_at.astimezone(timezone.utc),
+                quantity=order.line_items[0].quantity,
             )
 
             db.add(order_model)
