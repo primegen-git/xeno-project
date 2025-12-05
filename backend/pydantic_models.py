@@ -26,9 +26,9 @@ class CustomerResponse(BaseModel):
 
 class VariantModel(BaseModel):
     id: int
-    options: str
+    options: str | None
     price: float
-    ski: str
+    ski: str | None
     quantity: int
 
 
@@ -36,8 +36,8 @@ class ProductModel(BaseModel):
     id: int
     title: str
     vendor: str
-    product_type: str
-    tags: bool
+    product_type: str | None
+    tags: str | None
     variants: List[VariantModel]
 
 
