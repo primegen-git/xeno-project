@@ -6,6 +6,7 @@ import models
 from typing import AsyncGenerator
 from database import engine, get_db
 from routers.shops import router as shops_router
+from routers.shopify_sync import router as shopify_sync_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -43,3 +44,4 @@ async def check_database(db: Session = Depends(get_db)):
 
 
 app.include_router(router=shops_router, prefix="/shops", tags=["shops"])
+app.include_router(router=shopify_sync_router, prefix="/sync", tags=["shops"])
