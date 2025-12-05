@@ -26,10 +26,10 @@ class CustomerResponse(BaseModel):
 
 class VariantModel(BaseModel):
     id: int
-    options: str | None
+    option1: str | None
     price: float
-    ski: str | None
-    quantity: int
+    sku: str | None
+    inventory_quantity: int
 
 
 class ProductModel(BaseModel):
@@ -41,5 +41,5 @@ class ProductModel(BaseModel):
     variants: List[VariantModel]
 
 
-class ProductResponsse(BaseModel):
+class ProductResponse(BaseModel):
     products: List[ProductModel]
