@@ -4,6 +4,7 @@ from utils import fetch_data_from_shopify, decode_jwt_token
 import models
 from sqlalchemy.orm import Session
 from database import get_db
+from datetime import timezone
 
 
 router = APIRouter()
@@ -158,6 +159,7 @@ async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
             db_order.tenant_id = tenant_id
             db_order.customer_id = order.customer.id
             db_order.variant_id = order.line_items[0].variant_id
+            db_order.created_at = order.created_at.astimezone(timezone.utc)
 
         else:
             order_model = models.Order(
@@ -165,6 +167,7 @@ async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
                 tenant_id=tenant_id,
                 customer_id=order.customer.id,
                 variant_id=order.line_items[0].variant_id,
+                created_at=order.created_at.astimezone(timezone.utc),
             )
 
             db.add(order_model)
