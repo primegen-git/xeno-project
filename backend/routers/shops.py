@@ -38,19 +38,6 @@ if not CLIENT_ACCESS_KEY:
 
 @router.get("/install")
 async def install(res: Response, shop: str, db: Session = Depends(get_db)):
-    # tenant = db.execute(
-    #     Select(models.Tenant).where(models.Tenant.shop == shop)
-    # ).scalar_one_or_none()
-    #
-    # if tenant is not None:
-    #     payload = {"tenant_id": tenant.id, "access_token": tenant.access_token}
-    #
-    #     encoded_jwt = create_jwt_token(payload)
-    #
-    #     res.set_cookie(key="token", value=encoded_jwt, httponly=True)
-    #
-    #     return {"success": True, "message": "Login Successful"}
-
     install_url = (
         f"https://{shop}/admin/oauth/authorize"
         f"?client_id={CLIENT_ID}"
@@ -72,25 +59,15 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
         data = response.json()
 
         access_token = data.get("access_token")
-        granted_scopes = data.get("scope")  # Check what scopes Shopify actually gave us
 
-        print(f"✅ NEW TOKEN RECEIVED FOR {shop}")
-        print(f"🔎 Scopes on this token: {granted_scopes}")
-
-        # --- FIX: UPSERT LOGIC (Update or Insert) ---
         existing_tenant = db.execute(
             Select(models.Tenant).where(models.Tenant.shop == shop)
         ).scalar_one_or_none()
 
         if existing_tenant:
-            # UPDATE the existing row with the NEW token
-            print("🔄 Updating existing tenant token...")
             existing_tenant.access_token = access_token
-            # If you have a scope column, update it too
-            # existing_tenant.scopes = granted_scopes
             tenant_id = existing_tenant.id
         else:
-            # INSERT a new row
             print("kj Creating new tenant...")
             new_tenant = models.Tenant(shop=shop, access_token=access_token)
             db.add(new_tenant)
@@ -98,9 +75,8 @@ async def callback(res: Response, shop: str, code: str, db: Session = Depends(ge
             db.refresh(new_tenant)
             tenant_id = new_tenant.id
 
-        db.commit()  # Save changes
+        db.commit()
 
-        # Generate JWT with the NEW token
         jwt_payload = {"tenant_id": tenant_id, "access_token": access_token}
         encoded_jwt = create_jwt_token(jwt_payload)
         res.set_cookie(key="token", value=encoded_jwt, httponly=True)
