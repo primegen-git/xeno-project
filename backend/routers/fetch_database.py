@@ -110,3 +110,48 @@ def list_orders(
 
     orders = db.scalars(stmt).all()
     return orders
+
+
+@router.get("/sales_by_month")
+async def get_sales_by_month(req: Request, db: Session = Depends(get_db)):
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
+
+    stmt = (
+        select(
+            func.to_char(models.Order.created_at, "Month").label("month"),
+            func.sum(models.Order.quantity * models.Variant.price).label("sales"),
+        )
+        .join(models.Variant, models.Order.variant_id == models.Variant.id)
+        .where(models.Order.tenant_id == tenant_id)
+        .group_by(func.to_char(models.Order.created_at, "Month"))
+    )
+
+    results = db.execute(stmt).all()
+
+    response = []
+    for month, sales in results:
+        response.append({"month": month.strip(), "sales": sales})
+
+    return JSONResponse(content=response, status_code=200)
+
+
+@router.get("/orders_by_month")
+async def get_orders_by_month(req: Request, db: Session = Depends(get_db)):
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
+
+    stmt = (
+        select(
+            func.to_char(models.Order.created_at, "Month").label("month"),
+            func.count(models.Order.id).label("orders"),
+        )
+        .where(models.Order.tenant_id == tenant_id)
+        .group_by(func.to_char(models.Order.created_at, "Month"))
+    )
+
+    results = db.execute(stmt).all()
+
+    response = []
+    for month, orders in results:
+        response.append({"month": month.strip(), "orders": orders})
+
+    return JSONResponse(content=response, status_code=200)
