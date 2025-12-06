@@ -1,15 +1,15 @@
 import os
-from fastapi.exceptions import HTTPException
-from fastapi import APIRouter, Depends, Response
-from dotenv import load_dotenv
-from fastapi.responses import RedirectResponse
-from sqlalchemy import Select
-from sqlalchemy.orm import Session
-from database import get_db
-import requests
-import models
-from utils import create_jwt_token
 
+import models
+import requests
+from database import get_db
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, Request
+from fastapi.exceptions import HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy import update
+from sqlalchemy.orm import Session
+from utils import create_jwt_token
 
 load_dotenv()
 
@@ -37,7 +37,7 @@ if not CLIENT_ACCESS_KEY:
 
 
 @router.get("/install")
-async def install(res: Response, shop: str, db: Session = Depends(get_db)):
+async def install(shop: str):
     install_url = (
         f"https://{shop}/admin/oauth/authorize"
         f"?client_id={CLIENT_ID}"
@@ -49,44 +49,61 @@ async def install(res: Response, shop: str, db: Session = Depends(get_db)):
 
 
 @router.get("/callback")
-async def callback(res: Response, shop: str, code: str, db: Session = Depends(get_db)):
+async def callback(req: Request, shop: str, code: str, db: Session = Depends(get_db)):
     token_url = f"https://{shop}/admin/oauth/access_token"
     payload = {"client_id": CLIENT_ID, "client_secret": CLIENT_ACCESS_KEY, "code": code}
 
     try:
-        is_user_exist = False
         response = requests.post(url=token_url, json=payload)
         response.raise_for_status()
         data = response.json()
 
         access_token = data.get("access_token")
 
-        existing_tenant = db.execute(
-            Select(models.Tenant).where(models.Tenant.shop == shop)
-        ).scalar_one_or_none()
+        user_id = req.cookies.get(shop, None)
 
-        if existing_tenant:
-            existing_tenant.access_token = access_token
-            tenant_id = existing_tenant.id
-            is_user_exist = True
-        else:
+        if user_id:
             new_tenant = models.Tenant(shop=shop, access_token=access_token)
             db.add(new_tenant)
-            db.commit()
-            db.refresh(new_tenant)
             tenant_id = new_tenant.id
+            db.execute(
+                update(models.User)
+                .where(models.User.id == user_id)
+                .values(tenant_id=tenant_id)
+            )
+            db.commit()
 
-        db.commit()
+            jwt_payload = {"tenant_id": tenant_id}
+            encoded_jwt = create_jwt_token(jwt_payload)
 
-        jwt_payload = {"tenant_id": tenant_id, "access_token": access_token}
-        encoded_jwt = create_jwt_token(jwt_payload)
-        response = RedirectResponse(
-            url=f"http://localhost:3000/post-auth?is_user_exist={is_user_exist}"
+            response = JSONResponse(
+                content={"success": True, "is_login": False}, status_code=200
+            )
+
+            response.set_cookie(
+                key="token",
+                value=encoded_jwt,
+                secure=True,
+                samesite="none",
+                httponly=True,
+            )
+
+            return response
+
+        tenant_id = req.cookies.get("tenant_id", None)
+
+        if not tenant_id:
+            raise HTTPException(detail="UnAuthorized access", status_code=401)
+
+        db.execute(
+            update(models.Tenant)
+            .where(models.Tenant.tenant_id == tenant_id)
+            .values(access_token=access_token)
         )
-        response.set_cookie(
-            key="token", value=encoded_jwt, httponly=True, samesite="none", secure=True
+
+        return JSONResponse(
+            content={"success": True, "is_login": True}, status_code=200
         )
-        return response
 
     except Exception as e:
         print(f"Callback Error: {e}")
