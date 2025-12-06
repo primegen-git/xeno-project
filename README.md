@@ -131,31 +131,6 @@ CREATE DATABASE xeno_project;
 5.  **Explore Dashboard**: View your sales data, graphs, and top customers on the main dashboard.
 6.  **Filter Data**: Use the "Filter by Date" link in the sidebar to view metrics for a specific time period.
 
-## 🔄 Application Flow
-
-### 1. Sign Up
-Create an account to access the dashboard.
-![Sign Up Page](frontend/src/assets/signup.png)
-
-### 2. Token Acquisition Flow
-Initiate the connection with Shopify.
-![Token Acquisition](frontend/src/assets/token_acquisition.png)
-
-#### 2.1 Permission Prompt
-Authorize the application to access your Shopify store data.
-![Permission Prompt](frontend/src/assets/permission_prompt.png)
-
-### 3. Fetch and Sync
-The application automatically fetches and synchronizes data (Customers, Products, Orders) from Shopify to the local database.
-
-### 4. Dashboard
-Visualize key metrics and insights on the main dashboard.
-![Dashboard](frontend/src/assets/dashboard.png)
-
-### 5. Filter by Date
-Analyze data for specific time ranges using the dedicated filter page.
-![Filter by Date](frontend/src/assets/filter_by_date.png)
-
 ##  Data Management Scripts
 This project includes powerful scripts to manage test data in your Shopify store, located in `backend/scripts/`.
 
@@ -182,7 +157,33 @@ python backend/scripts/delete_products.py
 python backend/scripts/delete_customers.py
 ```
 
-##  Project Structure
+## 🔄 Application Flow
+
+### 1. Signup
+Create a new account to access the dashboard.
+![Signup Flow](frontend/src/assets/images/signup_flow.png)
+
+### 2. Token Acquisition Flow
+Connect your Shopify store using OAuth 2.0.
+![Token Acquisition Flow](frontend/src/assets/images/token_acquisition.png)
+
+#### 2.1 Permission Prompt
+Authorize the application to access your store's data.
+![Permission Prompt](frontend/src/assets/images/permission_prompt.png)
+
+### 3. Fetch and Sync
+Automatically ingest Customers, Products, and Orders from Shopify.
+![Fetch and Sync](frontend/src/assets/images/fetch_sync.png)
+
+### 4. Dashboard
+Visualize key metrics and sales trends.
+![Dashboard](frontend/src/assets/images/dashboard.png)
+
+### 5. Filter by Date
+Analyze data for specific time periods.
+![Filter by Date](frontend/src/assets/images/filter_by_date.png)
+
+## 📂 Project Structure
 ```
 xeno-project/
 ├── backend/
