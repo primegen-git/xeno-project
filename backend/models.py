@@ -15,12 +15,31 @@ class Dummy(Base):
     message: Mapped[str] = mapped_column()
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
+
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="user")
+
+
 class Tenant(Base):
     __tablename__ = "tenants"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True, autoincrement=True)
     shop: Mapped[str] = mapped_column(unique=True, nullable=False)
     access_token: Mapped[str] = mapped_column(unique=True, nullable=False)
+
+    user: Mapped["User"] = relationship(
+        "Tenant",
+        uselist=False,
+        passive_deletes=True,
+        cascade="all, delete-orphan",
+        back_populates="user",
+    )
 
     product: Mapped[List["Product"]] = relationship(
         "Product",
