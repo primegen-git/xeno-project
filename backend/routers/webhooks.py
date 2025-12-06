@@ -10,7 +10,9 @@ import requests
 from database import get_db
 import models
 from pydantic_models import CustomerModel, OrderModel, OrderResponseModel, ProductModel
-from utils import decode_jwt_token
+from utils import decode_jwt_token, verify_webhook
+import json
+
 
 load_dotenv()
 
@@ -170,7 +172,16 @@ async def register_product_webhook(
 
 
 @router.post("/orders/create")
-async def save_order(req: Request, order: OrderModel, db: Session = Depends(get_db)):
+async def save_order(req: Request, db: Session = Depends(get_db)):
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    body = await req.body()
+
+    if not verify_webhook(body, hmac_header):
+        raise HTTPException(status_code=401, detail="Unauthorized Webhook")
+
+    data = json.loads(body)
+    order = OrderModel(**data)
+
     shop = req.headers.get("X-Shopify-Shop-Domain", None)
 
     if not shop:
@@ -183,26 +194,44 @@ async def save_order(req: Request, order: OrderModel, db: Session = Depends(get_
     if not tenant_id:
         return
 
-    existing_order = db.get(models.Order, order.id)
-    if existing_order:
-        return
-    order_model = models.Order(
-        id=order.id,
-        tenant_id=tenant_id,
-        customer_id=order.customer.id,
-        variant_id=order.line_items[0].variant_id,
-        quantity=order.line_items[0].quantity,
-        created_at=order.created_at,
-    )
+    # Check if order already exists (Idempotency)
+    existing_order = db.execute(
+        select(models.Order).where(models.Order.id == order.id)
+    ).scalar_one_or_none()
 
-    db.add(order_model)
-    db.commit()
+    if existing_order:
+        print(f"Order {order.id} already exists. Skipping.")
+        return
+
+    # The original code only saved the first line item.
+    # To maintain the existing data model's integrity (assuming Order.id is a PK for the Order table),
+    # we will continue to only process the first line item.
+    if order.line_items:
+        first_line_item = order.line_items[0]
+        order_model = models.Order(
+            id=order.id,
+            tenant_id=tenant_id,
+            customer_id=order.customer.id,
+            variant_id=first_line_item.variant_id,
+            quantity=first_line_item.quantity,
+            created_at=order.created_at,
+        )
+
+        db.add(order_model)
+        db.commit()
 
 
 @router.post("/products/create")
-async def save_product(
-    req: Request, product: ProductModel, db: Session = Depends(get_db)
-):
+async def save_product(req: Request, db: Session = Depends(get_db)):
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    body = await req.body()
+
+    if not verify_webhook(body, hmac_header):
+        raise HTTPException(status_code=401, detail="Unauthorized Webhook")
+
+    data = json.loads(body)
+    product = ProductModel(**data)
+
     shop = req.headers.get("X-Shopify-Shop-Domain", None)
 
     if not shop:
@@ -215,9 +244,15 @@ async def save_product(
     if not tenant_id:
         return
 
-    product_model = db.get(models.Product, product.id)
-    if product_model:
+    # Check if product already exists
+    existing_product = db.execute(
+        select(models.Product).where(models.Product.id == product.id)
+    ).scalar_one_or_none()
+
+    if existing_product:
+        print(f"Product {product.id} already exists. Skipping.")
         return
+
     product_model = models.Product(
         id=product.id,
         title=product.title,
@@ -242,9 +277,16 @@ async def save_product(
 
 
 @router.post("/customers/create")
-async def customer_product(
-    req: Request, customer: CustomerModel, db: Session = Depends(get_db)
-):
+async def customer_product(req: Request, db: Session = Depends(get_db)):
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    body = await req.body()
+
+    if not verify_webhook(body, hmac_header):
+        raise HTTPException(status_code=401, detail="Unauthorized Webhook")
+
+    data = json.loads(body)
+    customer = CustomerModel(**data)
+
     shop = req.headers.get("X-Shopify-Shop-Domain", None)
 
     if not shop:
@@ -257,9 +299,26 @@ async def customer_product(
     if not tenant_id:
         return
 
-    existing_customer = db.get(models.Customer, customer.id)
+    # Check if customer already exists
+    existing_customer = db.execute(
+        select(models.Customer).where(models.Customer.id == customer.id)
+    ).scalar_one_or_none()
+
     if existing_customer:
+        print(f"Customer {customer.id} already exists. Skipping.")
         return
+
+    # Handle missing default address safely
+    address_model = None
+    if customer.default_address:
+        address_model = models.Address(
+            id=customer.default_address.id,
+            address1=customer.default_address.address1,
+            city=customer.default_address.city,
+            zip=customer.default_address.zip,
+            country=customer.default_address.country,
+            province=customer.default_address.province,
+        )
 
     customer_model = models.Customer(
         id=customer.id,
@@ -268,14 +327,7 @@ async def customer_product(
         email=customer.email,
         verified_email=customer.verified_email,
         tenant_id=tenant_id,
-        address=models.Address(
-            id=customer.default_address.id,
-            address1=customer.default_address.address1,
-            city=customer.default_address.city,
-            zip=customer.default_address.zip,
-            country=customer.default_address.country,
-            province=customer.default_address.province,
-        ),
+        address=address_model,
     )
 
     db.add(customer_model)
