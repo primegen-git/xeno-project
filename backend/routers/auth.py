@@ -45,7 +45,7 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
 
     response.set_cookie(
         key=payload.shop,
-        value=user_model.shop,
+        value=str(user_model.id),
         secure=True,
         samesite="none",
         httponly=True,
