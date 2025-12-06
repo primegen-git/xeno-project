@@ -52,13 +52,14 @@ async def get_customers(req: Request, shop: str, db: Session = Depends(get_db)):
                     tenant_id=tenant_id,
                     addresses=[
                         models.Address(
-                            id=customer.addresses[0].id,
-                            address1=customer.addresses[0].address1,
-                            city=customer.addresses[0].city,
-                            zip=customer.addresses[0].zip,
-                            country=customer.addresses[0].country,
-                            province=customer.addresses[0].province,
+                            id=addr.id,
+                            address1=addr.address1,
+                            city=addr.city,
+                            zip=addr.zip,
+                            country=addr.country,
+                            province=addr.province,
                         )
+                        for addr in customer.addresses
                     ],
                 )
 
