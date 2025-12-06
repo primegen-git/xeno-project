@@ -31,7 +31,7 @@ if JWT_ALGORITHM is None:
 
 
 def get_hashed_password(password):
-    return "password_hashed"
+    return password
 
 
 def create_jwt_token(payload: Dict):
@@ -114,17 +114,23 @@ def fetch_data_from_shopify(shop, resource, access_token):
 
 def get_tenant_id_and_access_token(req, db):
     encoded_jwt_token = req.cookies.get("token", None)
-    if encoded_jwt_token is None:
-        raise HTTPException(status_code=401, detail="User is unauthorized.")
 
-    payload = decode_jwt_token(encoded_jwt_token)
+    try:
+        if encoded_jwt_token is None:
+            raise HTTPException(status_code=401, detail="User is unauthorized.")
 
-    tenant_id = payload["tenant_id"]
+        payload = decode_jwt_token(encoded_jwt_token)
 
-    access_token = db.execute(
-        select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
-    ).scalar_one
+        tenant_id = payload["tenant_id"]
 
-    access_token = payload["access_token"]
+        access_token = db.execute(
+            select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
+        ).scalar_one()
 
-    return (tenant_id, access_token)
+        return (tenant_id, access_token)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error in getting tenant_id and access key\nError: {e}",
+        )
