@@ -1,34 +1,20 @@
 from collections import defaultdict
-from fastapi import APIRouter, Depends, Request, Query
-from fastapi.exceptions import HTTPException
+from datetime import date, datetime, time, timezone
+
+import models
+from database import get_db
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
-from utils import decode_jwt_token
-from database import get_db
-import models
-from datetime import date, datetime, timezone, time
+from utils import get_tenant_id_and_access_token
 
 router = APIRouter()
 
 
-def get_tenent_id_and_access_token(req):
-    encoded_jwt_token = req.cookies.get("token", None)
-    if encoded_jwt_token is None:
-        raise HTTPException(status_code=401, detail="User is unauthorized.")
-
-    payload = decode_jwt_token(encoded_jwt_token)
-
-    tenant_id = payload["tenant_id"]
-
-    access_token = payload["access_token"]
-
-    return (tenant_id, access_token)
-
-
 @router.get("/total_customers")
 async def get_total_customers(req: Request, db: Session = Depends(get_db)):
-    tenant_id, _ = get_tenent_id_and_access_token(req)
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
 
     total_customers = db.scalar(
         select(func.count(models.Customer.id)).where(
@@ -41,7 +27,7 @@ async def get_total_customers(req: Request, db: Session = Depends(get_db)):
 
 @router.get("/total_products")
 async def get_total_products(req: Request, db: Session = Depends(get_db)):
-    tenant_id, _ = get_tenent_id_and_access_token(req)
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
 
     total_products = db.scalar(
         select(func.count(models.Product.id)).where(
@@ -53,7 +39,7 @@ async def get_total_products(req: Request, db: Session = Depends(get_db)):
 
 @router.get("/total_orders")
 async def get_total_orders(req: Request, db: Session = Depends(get_db)):
-    tenant_id, _ = get_tenent_id_and_access_token(req)
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
 
     total_orders = db.scalar(
         select(func.count(models.Order.id)).where(models.Order.tenant_id == tenant_id)
@@ -64,7 +50,7 @@ async def get_total_orders(req: Request, db: Session = Depends(get_db)):
 
 @router.get("/top_customers")
 async def get_top_customers(req: Request, db: Session = Depends(get_db)):
-    tenant_id, _ = get_tenent_id_and_access_token(req)
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
 
     stmt = (
         select(
@@ -111,7 +97,7 @@ def list_orders(
     end_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    tenant_id, _ = get_tenent_id_and_access_token(req)
+    tenant_id, _ = get_tenant_id_and_access_token(req, db)
     stmt = select(models.Order).where(models.Order.tenant_id == tenant_id)
 
     if start_date:
