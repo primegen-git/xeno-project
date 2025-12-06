@@ -5,7 +5,7 @@ from datetime import datetime
 
 class AddressModel(BaseModel):
     id: int
-    address1: str
+    address1: str | None
     city: str
     province: str
     zip: int
