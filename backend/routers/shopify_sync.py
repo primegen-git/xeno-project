@@ -29,19 +29,15 @@ async def get_customers(req: Request, shop: str, db: Session = Depends(get_db)):
                 db_customer.email = customer.email
                 db_customer.verified_email = customer.verified_email
                 db_customer.tenant_id = tenant_id
+                db_customer.address = models.Address(
+                    id=customer.default_address.id,
+                    address1=customer.default_address.address1,
+                    city=customer.default_address.city,
+                    zip=customer.default_address.zip,
+                    country=customer.default_address.country,
+                    province=customer.default_address.province,
+                )
 
-                db_customer.addresses.clear()
-                for addr in customer.addresses:
-                    db_customer.addresses.append(
-                        models.Address(
-                            id=addr.id,
-                            address1=addr.address1,
-                            city=addr.city,
-                            province=addr.province,
-                            zip=addr.zip,
-                            country=addr.country,
-                        )
-                    )
             else:
                 customer_model = models.Customer(
                     id=customer.id,
@@ -50,7 +46,7 @@ async def get_customers(req: Request, shop: str, db: Session = Depends(get_db)):
                     email=customer.email,
                     verified_email=customer.verified_email,
                     tenant_id=tenant_id,
-                    addresses=models.Address(
+                    address=models.Address(
                         id=customer.default_address.id,
                         address1=customer.default_address.address1,
                         city=customer.default_address.city,
