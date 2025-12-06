@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from utils import check_password, create_jwt_token, get_hashed_password
+from utils import verify_password, create_jwt_token, get_hashed_password
 
 router = APIRouter()
 
@@ -60,7 +60,7 @@ async def login(payload: LoginModel, db: Session = Depends(get_db)):
     if not existing_user:
         raise HTTPException(detail="User does not exist", status_code=404)
 
-    is_passwrod_matched = check_password(
+    is_passwrod_matched = verify_password(
         payload.password, existing_user.hashed_password
     )
 
