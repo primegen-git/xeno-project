@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, Response
+import models
+from database import get_db
+from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from database import get_db
-import models
-from utils import get_hashed_password
+from utils import create_jwt_token, get_hashed_password
 
 router = APIRouter()
 
@@ -42,6 +42,7 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
     response = JSONResponse(
         content={"success": True, "shop": payload.shop}, status_code=200
     )
+
     response.set_cookie(
         key=payload.shop,
         value=user_model.shop,
@@ -67,4 +68,15 @@ async def login(payload: LoginModel, db: Session = Depends(get_db)):
     if existing_user.hashed_password != hashed_password:
         raise HTTPException(detail="Password does not match", status_code=401)
 
-    return JSONResponse(content={"success": True}, status_code=200)
+    shop = existing_user.tenant.shop
+    tenant_id = existing_user.tenant_id
+
+    response = JSONResponse(content={"success": True, "shop": shop}, status_code=200)
+
+    encoded_jwt = create_jwt_token({"tenant_id": tenant_id})
+
+    response.set_cookie(
+        key="token", value=encoded_jwt, secure=True, samesite="none", httponly=True
+    )
+
+    return response
