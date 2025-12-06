@@ -59,6 +59,14 @@ class Tenant(Base):
         passive_deletes=True,
     )
 
+    webhooks: Mapped[List["Webhook"]] = relationship(
+        "Webhook",
+        back_populates="tenant",
+        uselist=True,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
 
 class Product(Base):
     __tablename__ = "products"
@@ -156,3 +164,21 @@ class Order(Base):
         index=True,
         nullable=False,
     )
+
+
+class Webhook(Base):
+    __tablename__ = "webhooks"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    topic: Mapped[str] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        index=True,
+        nullable=False,
+    )
+
+    format: Mapped[str] = mapped_column()
+
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
+
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="webhooks")
