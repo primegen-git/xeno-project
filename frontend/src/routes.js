@@ -3,6 +3,7 @@ import FilterByDate from "layouts/filter-by-date";
 import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import PostAuth from "layouts/post-auth";
+import ShopsCallback from "layouts/shops/callback";
 import Icon from "@mui/material/Icon";
 const routes = [
   {
@@ -38,12 +39,18 @@ const routes = [
     component: <SignUp />,
   },
   {
-    type: "collapse",
     name: "Post Auth",
     key: "post-auth",
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/post-auth",
     component: <PostAuth />,
+  },
+  {
+    name: "Shops Callback",
+    key: "shops-callback",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "/shops/callback",
+    component: <ShopsCallback />,
   },
 ];
 export default routes;

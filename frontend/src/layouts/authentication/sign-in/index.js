@@ -1,19 +1,33 @@
 import { useState } from "react";
 import Card from "@mui/material/Card";
-import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentication/components/BasicLayout";
+import axios from "axios";
+
 function Basic() {
-  const [shopName, setShopName] = useState("");
-  const handleSignIn = () => {
-    if (shopName) {
-      localStorage.setItem("shop_name", shopName);
-      window.location.href = `http://localhost:8000/shops/install?shop=${shopName}`;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignIn = async () => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        const shop = response.data.shop;
+        window.location.href = `${process.env.REACT_APP_BACKEND_URL}/shops/install?shop=${shop}&user_id=`;
+      }
+    } catch (error) {
+      console.error("Login failed", error);
+      alert("Login failed. Please check your credentials.");
     }
   };
+
   return (
     <BasicLayout>
       <Card>
@@ -29,18 +43,36 @@ function Basic() {
           textAlign="center"
         >
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            Sign in with Shopify
+            Sign in
           </MDTypography>
         </MDBox>
         <MDBox pt={10} pb={10} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
               <MDInput
-                type="text"
-                label="Shop Name (e.g. my-shop.myshopify.com)"
+                type="email"
+                label="Email"
                 fullWidth
-                value={shopName}
-                onChange={(e) => setShopName(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "50px",
+                    fontSize: "1.1rem",
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1rem",
+                  },
+                }}
+              />
+            </MDBox>
+            <MDBox mb={2}>
+              <MDInput
+                type="password"
+                label="Password"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: "50px",

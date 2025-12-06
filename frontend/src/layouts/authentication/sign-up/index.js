@@ -1,12 +1,36 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Card from "@mui/material/Card";
-import Checkbox from "@mui/material/Checkbox";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import CoverLayout from "layouts/authentication/components/CoverLayout";
+import axios from "axios";
+
 function Cover() {
+  const [shop, setShop] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignUp = async () => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/signup`, {
+        shop,
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        const userId = response.data.user_id;
+        window.location.href = `${process.env.REACT_APP_BACKEND_URL}/shops/install?shop=${shop}&user_id=${userId}`;
+      }
+    } catch (error) {
+      console.error("Signup failed", error);
+      alert("Signup failed. Please try again.");
+    }
+  };
+
   return (
     <CoverLayout>
       <Card>
@@ -30,9 +54,11 @@ function Cover() {
             <MDBox mb={2}>
               <MDInput
                 type="text"
-                label="Name"
+                label="Shop Name (e.g. my-shop.myshopify.com)"
                 variant="standard"
                 fullWidth
+                value={shop}
+                onChange={(e) => setShop(e.target.value)}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: "50px",
@@ -50,6 +76,8 @@ function Cover() {
                 label="Email"
                 variant="standard"
                 fullWidth
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: "50px",
@@ -67,6 +95,8 @@ function Cover() {
                 label="Password"
                 variant="standard"
                 fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 sx={{
                   "& .MuiInputBase-root": {
                     height: "50px",
@@ -79,8 +109,8 @@ function Cover() {
               />
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton variant="gradient" color="info" fullWidth onClick={handleSignUp}>
+                sign up
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">

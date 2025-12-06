@@ -24,9 +24,12 @@ function FilterByDate() {
       let query = "";
       if (startDate) query += `?start_date=${startDate}`;
       if (endDate) query += `${query ? "&" : "?"}end_date=${endDate}`;
-      const response = await axios.get(`http://localhost:8000/fetch/orders${query}`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/fetch/orders${query}`,
+        {
+          withCredentials: true,
+        }
+      );
       const formattedRows = response.data.map((order) => ({
         id: order.id,
         customer_id: order.customer_id,

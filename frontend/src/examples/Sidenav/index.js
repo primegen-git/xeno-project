@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, NavLink } from "react-router-dom";
+import axios from "axios";
 import PropTypes from "prop-types";
 import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
@@ -39,8 +40,41 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
     handleMiniSidenav();
     return () => window.removeEventListener("resize", handleMiniSidenav);
   }, [dispatch, location]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const shopName = localStorage.getItem("shop_name");
+      setIsLoggedIn(!!shopName);
+    };
+
+    window.addEventListener("auth-change", checkAuth);
+    checkAuth();
+
+    return () => window.removeEventListener("auth-change", checkAuth);
+  }, [location]);
+
+  const handleLogout = async () => {
+    try {
+      await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+    localStorage.removeItem("shop_name");
+    window.dispatchEvent(new Event("auth-change"));
+    setIsLoggedIn(false);
+    window.location.href = "/authentication/sign-in";
+  };
+
   const renderRoutes = routes.map(({ type, name, icon, title, noCollapse, key, href, route }) => {
+    if (isLoggedIn && (key === "sign-in" || key === "sign-up")) {
+      return null;
+    }
+
     let returnValue;
+
     if (type === "collapse") {
       returnValue = href ? (
         <Link
@@ -90,38 +124,28 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         />
       );
     }
+
     return returnValue;
   });
+
   return (
     <SidenavRoot
       {...rest}
       variant="permanent"
       ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode }}
     >
-      <MDBox pt={3} pb={1} px={4} textAlign="center">
+      <MDBox pt={3} pb={1} px={4}>
         <MDBox
-          display={{ xs: "block", xl: "none" }}
-          position="absolute"
-          top={0}
-          right={0}
-          p={1.625}
-          onClick={closeSidenav}
-          sx={{ cursor: "pointer" }}
+          width={!brandName && "100%"}
+          sx={(theme) => ({
+            ...sidenavLogoLabel(theme, { miniSidenav }),
+            ml: 0, // Override default margin
+            textAlign: "center",
+          })}
         >
-          <MDTypography variant="h6" color="secondary">
-            <Icon sx={{ fontWeight: "bold" }}>close</Icon>
+          <MDTypography component="h3" variant="h6" fontWeight="medium" color={textColor}>
+            {brandName}
           </MDTypography>
-        </MDBox>
-        <MDBox component={NavLink} to="/" display="flex" alignItems="center">
-          {brand && <MDBox component="img" src={brand} alt="Brand" width="2rem" />}
-          <MDBox
-            width={!brandName && "100%"}
-            sx={(theme) => sidenavLogoLabel(theme, { miniSidenav })}
-          >
-            <MDTypography component="h6" variant="button" fontWeight="medium" color={textColor}>
-              {brandName}
-            </MDTypography>
-          </MDBox>
         </MDBox>
       </MDBox>
       <Divider
@@ -131,6 +155,13 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         }
       />
       <List>{renderRoutes}</List>
+      {isLoggedIn && (
+        <MDBox p={2} mt="auto">
+          <MDButton variant="gradient" color="info" fullWidth onClick={handleLogout}>
+            Logout
+          </MDButton>
+        </MDBox>
+      )}
     </SidenavRoot>
   );
 }

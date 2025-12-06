@@ -16,23 +16,54 @@ function PostAuth() {
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const isUserExist = queryParams.get("is_user_exist") === "True";
+    const isLogin = queryParams.get("is_login");
     const storedShop = localStorage.getItem("shop_name");
     setShop(storedShop);
-    if (isUserExist) {
+
+    if (isLogin === "true") {
+      // Login -> Show Options
       setShowOptions(true);
-      setStatus("User exists. Choose an option.");
+      setStatus("Welcome back! Choose an option.");
+    } else if (isLogin === "false") {
+      // Signup -> Auto Sync
+      if (storedShop) {
+        startSync(storedShop);
+      } else {
+        setStatus("Error: Shop name missing.");
+      }
     } else {
-      startSync(storedShop);
+      // Fallback or error state
+      setStatus("Unknown state.");
     }
   }, [location]);
   const fetchDashboardData = async () => {
     try {
-      const [customersRes, productsRes, ordersRes, topCustomersRes] = await Promise.all([
-        axios.get("http://localhost:8000/fetch/total_customers", { withCredentials: true }),
-        axios.get("http://localhost:8000/fetch/total_products", { withCredentials: true }),
-        axios.get("http://localhost:8000/fetch/total_orders", { withCredentials: true }),
-        axios.get("http://localhost:8000/fetch/top_customers", { withCredentials: true }),
+      const [
+        customersRes,
+        productsRes,
+        ordersRes,
+        topCustomersRes,
+        salesByMonthRes,
+        ordersByMonthRes,
+      ] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_customers`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_products`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_orders`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/top_customers`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/sales_by_month`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/orders_by_month`, {
+          withCredentials: true,
+        }),
       ]);
       return {
         stats: {
@@ -41,6 +72,8 @@ function PostAuth() {
           orders: ordersRes.data,
         },
         topCustomers: topCustomersRes.data.data || [],
+        salesByMonth: salesByMonthRes.data,
+        ordersByMonth: ordersByMonthRes.data,
       };
     } catch (error) {
       console.error("Error fetching dashboard data", error);
@@ -52,13 +85,13 @@ function PostAuth() {
     setShowOptions(false);
     setLoading(true);
     try {
-      await axios.get(`http://localhost:8000/sync/customers?shop=${shopName}`, {
+      await axios.get(`${process.env.REACT_APP_BACKEND_URL}/sync/customers?shop=${shopName}`, {
         withCredentials: true,
       });
-      await axios.get(`http://localhost:8000/sync/products?shop=${shopName}`, {
+      await axios.get(`${process.env.REACT_APP_BACKEND_URL}/sync/products?shop=${shopName}`, {
         withCredentials: true,
       });
-      await axios.get(`http://localhost:8000/sync/orders?shop=${shopName}`, {
+      await axios.get(`${process.env.REACT_APP_BACKEND_URL}/sync/orders?shop=${shopName}`, {
         withCredentials: true,
       });
       setStatus("Sync complete! Fetching latest data...");

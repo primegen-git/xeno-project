@@ -14,19 +14,89 @@ function Dashboard() {
     products: 0,
     orders: 0,
   });
+  const [salesData, setSalesData] = useState([]);
+  const [ordersData, setOrdersData] = useState([]);
   const [topCustomers, setTopCustomers] = useState([]);
+
+  const processGraphData = (sales, orders) => {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const salesArray = new Array(12).fill(0);
+    const ordersArray = new Array(12).fill(0);
+
+    if (Array.isArray(sales)) {
+      sales.forEach((item) => {
+        if (item && item.month) {
+          const index = months.indexOf(item.month.trim());
+          if (index !== -1) {
+            salesArray[index] = item.sales;
+          }
+        }
+      });
+    }
+
+    if (Array.isArray(orders)) {
+      orders.forEach((item) => {
+        if (item && item.month) {
+          const index = months.indexOf(item.month.trim());
+          if (index !== -1) {
+            ordersArray[index] = item.orders;
+          }
+        }
+      });
+    }
+
+    setSalesData(salesArray);
+    setOrdersData(ordersArray);
+  };
+
   useEffect(() => {
     if (state?.data) {
       setStats(state.data.stats);
       setTopCustomers(state.data.topCustomers);
+      processGraphData(state.data.salesByMonth, state.data.ordersByMonth);
     } else {
       const fetchData = async () => {
         try {
-          const [customersRes, productsRes, ordersRes, topCustomersRes] = await Promise.all([
-            axios.get("http://localhost:8000/fetch/total_customers", { withCredentials: true }),
-            axios.get("http://localhost:8000/fetch/total_products", { withCredentials: true }),
-            axios.get("http://localhost:8000/fetch/total_orders", { withCredentials: true }),
-            axios.get("http://localhost:8000/fetch/top_customers", { withCredentials: true }),
+          const [
+            customersRes,
+            productsRes,
+            ordersRes,
+            topCustomersRes,
+            salesByMonthRes,
+            ordersByMonthRes,
+          ] = await Promise.all([
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_customers`, {
+              withCredentials: true,
+            }),
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_products`, {
+              withCredentials: true,
+            }),
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_orders`, {
+              withCredentials: true,
+            }),
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/top_customers`, {
+              withCredentials: true,
+            }),
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/sales_by_month`, {
+              withCredentials: true,
+            }),
+            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/orders_by_month`, {
+              withCredentials: true,
+            }),
           ]);
           setStats({
             customers: customersRes.data,
@@ -34,6 +104,7 @@ function Dashboard() {
             orders: ordersRes.data,
           });
           setTopCustomers(topCustomersRes.data.data || []);
+          processGraphData(salesByMonthRes.data, ordersByMonthRes.data);
         } catch (error) {
           console.error("Error fetching dashboard data", error);
         }
@@ -41,23 +112,25 @@ function Dashboard() {
       fetchData();
     }
   }, [state]);
+
   const ordersChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
       {
         label: "Orders",
         color: "info",
-        data: [50, 40, 300, 220, 500, 250, 400, 230, 500, 350, 400, 600],
+        data: ordersData,
       },
     ],
   };
+
   const revenueChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
       {
         label: "Revenue",
         color: "success",
-        data: [1000, 2000, 1500, 3000, 2500, 4000, 3500, 5000, 4500, 6000, 5500, 7000],
+        data: salesData,
       },
     ],
   };
