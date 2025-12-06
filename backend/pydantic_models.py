@@ -5,7 +5,7 @@ from datetime import datetime
 
 class AddressModel(BaseModel):
     id: int
-    address1: str | None
+    address1: str
     city: str
     province: str
     zip: int
@@ -18,7 +18,7 @@ class CustomerModel(BaseModel):
     last_name: str
     email: str
     verified_email: bool
-    addresses: List[AddressModel]
+    default_address: AddressModel
     created_at: datetime
 
 
