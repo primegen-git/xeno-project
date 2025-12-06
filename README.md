@@ -1,9 +1,9 @@
-# Xeno FDE Internship Assignment - Shopify Data Ingestion & Insights Service
+# Multi-Tenant Shopify Data Ingestion & Insights Service
 
-## 📋 Project Overview
-A full-stack application designed to solve the Xeno FDE Internship Assignment. This service connects to a Shopify store, ingests data (Customers, Products, Orders) via the Shopify Admin API, stores it in a relational database (PostgreSQL) with multi-tenant isolation, and visualizes key business metrics on an interactive dashboard.
+##  Project Overview
+This service connects to a Shopify store, ingests data (Customers, Products, Orders) via the Shopify Admin API, stores it in a relational database (PostgreSQL) with multi-tenant isolation, and visualizes key business metrics on an interactive dashboard.
 
-## 🚀 Features
+## Features
 - **Shopify Integration**: Secure OAuth 2.0 flow to connect and authorize Shopify stores.
 - **Data Ingestion**: Robust syncing of Customers, Products, and Orders from Shopify to a local PostgreSQL database.
 - **Multi-Tenancy**: Architecture supports multiple users/shops, ensuring data isolation for each tenant.
@@ -15,7 +15,7 @@ A full-stack application designed to solve the Xeno FDE Internship Assignment. T
 - **Authentication**: Secure Email/Password login system using JWT (JSON Web Tokens).
 - **Data Management**: A suite of Python scripts to generate realistic dummy data and clean up the Shopify environment for testing.
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend**: 
   - React.js
   - Material UI (Dashboard Layout & Components)
@@ -31,14 +31,14 @@ A full-stack application designed to solve the Xeno FDE Internship Assignment. T
   - Git
   - python-dotenv
 
-## ⚙️ Prerequisites
+## ️ Prerequisites
 Before you begin, ensure you have the following installed:
 - **Node.js** (v14 or higher) & **npm**
 - **Python** (v3.8 or higher)
 - **PostgreSQL** (running locally or accessible via URL)
 - **Shopify Partner Account** (to create a development store and app)
 
-## 📦 Installation & Setup
+##  Installation & Setup
 
 ### 1. Database Setup
 Ensure your PostgreSQL server is running and create a new database for the project:
@@ -86,7 +86,7 @@ CREATE DATABASE xeno_project;
     # Ensure your App URL in Shopify is set to http://localhost:8000
     SHOPIFY_API_KEY=your_shopify_client_id
     SHOPIFY_API_SECRET=your_shopify_client_secret
-    REDIRECT_URI=http://localhost:8000/shops/callback
+    REDIRECT_URI=http://localhost:3000/shops/callback
     
     # For Data Scripts (Optional - only needed for generating/deleting dummy data)
     SHOPIFY_ACCESS_KEY=your_permanent_access_token
@@ -122,7 +122,7 @@ CREATE DATABASE xeno_project;
     ```
     The application will open automatically at `http://localhost:3000`.
 
-## 🖥️ Usage Guide
+## ️ Usage Guide
 
 1.  **Sign Up**: Open the app and create a new account using your email and password.
 2.  **Connect Store**: After logging in, you will be prompted to "Connect Shopify". Click the button to initiate the OAuth flow.
@@ -131,7 +131,32 @@ CREATE DATABASE xeno_project;
 5.  **Explore Dashboard**: View your sales data, graphs, and top customers on the main dashboard.
 6.  **Filter Data**: Use the "Filter by Date" link in the sidebar to view metrics for a specific time period.
 
-## 🧪 Data Management Scripts
+## 🔄 Application Flow
+
+### 1. Sign Up
+Create an account to access the dashboard.
+![Sign Up Page](frontend/src/assets/signup.png)
+
+### 2. Token Acquisition Flow
+Initiate the connection with Shopify.
+![Token Acquisition](frontend/src/assets/token_acquisition.png)
+
+#### 2.1 Permission Prompt
+Authorize the application to access your Shopify store data.
+![Permission Prompt](frontend/src/assets/permission_prompt.png)
+
+### 3. Fetch and Sync
+The application automatically fetches and synchronizes data (Customers, Products, Orders) from Shopify to the local database.
+
+### 4. Dashboard
+Visualize key metrics and insights on the main dashboard.
+![Dashboard](frontend/src/assets/dashboard.png)
+
+### 5. Filter by Date
+Analyze data for specific time ranges using the dedicated filter page.
+![Filter by Date](frontend/src/assets/filter_by_date.png)
+
+##  Data Management Scripts
 This project includes powerful scripts to manage test data in your Shopify store, located in `backend/scripts/`.
 
 **Prerequisite**: You must set `SHOPIFY_ACCESS_KEY` and `SHOPIFY_SHOP_NAME` in `backend/.env`.
@@ -157,7 +182,7 @@ python backend/scripts/delete_products.py
 python backend/scripts/delete_customers.py
 ```
 
-## 📂 Project Structure
+##  Project Structure
 ```
 xeno-project/
 ├── backend/
@@ -179,12 +204,3 @@ xeno-project/
 └── README.md             # Project documentation
 ```
 
-## 🤝 Contributing
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
----
-**Developed by Primegen for Xeno FDE Internship Assignment**
