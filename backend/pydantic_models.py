@@ -19,6 +19,7 @@ class CustomerModel(BaseModel):
     email: str
     verified_email: bool
     addresses: List[AddressModel]
+    created_at: datetime
 
 
 class CustomerResponse(BaseModel):
@@ -40,6 +41,7 @@ class ProductModel(BaseModel):
     product_type: str | None
     tags: str | None
     variants: List[VariantModel]
+    created_at: datetime
 
 
 class ProductResponse(BaseModel):
