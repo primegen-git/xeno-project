@@ -157,7 +157,7 @@ python backend/scripts/delete_products.py
 python backend/scripts/delete_customers.py
 ```
 
-## 🔄 Application Flow
+##  Application Flow
 
 ### 1. Signup
 Create a new account to access the dashboard.
@@ -182,6 +182,10 @@ Visualize key metrics and sales trends.
 ### 5. Filter by Date
 Analyze data for specific time periods.
 ![Filter by Date](frontend/src/assets/images/filter_by_date.png)
+
+## 🗄️ Database Schema
+The application uses a relational database (PostgreSQL) with the following schema design to support multi-tenancy and data integrity.
+![Database Schema](frontend/src/assets/images/database_schema.png)
 
 ## 📂 Project Structure
 ```
