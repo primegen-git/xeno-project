@@ -4,7 +4,7 @@ from typing import Dict
 import jwt
 from dotenv import load_dotenv
 import requests
-from sqlalchemy import Select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
@@ -30,7 +30,7 @@ if JWT_ALGORITHM is None:
     raise HTTPException(detail="JWT Algorithm is Unknown", status_code=500)
 
 
-def hashed_password(password):
+def get_hashed_password(password):
     return "password_hashed"
 
 
@@ -110,3 +110,21 @@ def fetch_data_from_shopify(shop, resource, access_token):
             )
 
     return shopify_data
+
+
+def get_tenant_id_and_access_token(req, db):
+    encoded_jwt_token = req.cookies.get("token", None)
+    if encoded_jwt_token is None:
+        raise HTTPException(status_code=401, detail="User is unauthorized.")
+
+    payload = decode_jwt_token(encoded_jwt_token)
+
+    tenant_id = payload["tenant_id"]
+
+    access_token = db.execute(
+        select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
+    ).scalar_one
+
+    access_token = payload["access_token"]
+
+    return (tenant_id, access_token)
