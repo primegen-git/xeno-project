@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan)
 
-origins = ["http://localhost:8080", "http://localhost:3000"]
+origins = ["http://localhost:8080", "http://localhost:3000", "https://xeno-project-wm1j.vercel.app"]
 
 app.add_middleware(
     CORSMiddleware,
