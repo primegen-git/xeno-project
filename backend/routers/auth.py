@@ -32,7 +32,7 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Account Already exist")
 
     user_model = models.User(
-        email=payload.email, hashed_passwrod=get_hashed_password(payload.password)
+        email=payload.email, hashed_password=get_hashed_password(payload.password)
     )
 
     db.add(user_model)
