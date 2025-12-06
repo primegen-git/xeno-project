@@ -9,19 +9,19 @@ import requests
 
 from database import get_db
 import models
-from pydantic_models import CustomerModel, OrderModel, OrderResponseModel, ProductModel
+from pydantic_models import CustomerModel, OrderModel, ProductModel
 from utils import decode_jwt_token, verify_webhook
 import json
 
+router = APIRouter()
 
 load_dotenv()
+
 
 BACKEND_URI = os.getenv("BACKEND_URI", None)
 
 if not BACKEND_URI:
     raise HTTPException(detail="BACKEND_URI does not exist", status_code=500)
-
-router = APIRouter()
 
 
 @router.get("/register/order/create")
@@ -58,6 +58,19 @@ async def register_order_webhook(
         response = requests.post(url, json=payload, headers=headers)
 
         if response.status_code == 201:
+            body = response.json()
+
+            webhook_model = models.Webhook(
+                id=body.id,
+                topic=body.topic,
+                created_at=body.created_at,
+                format=body.format,
+                tenant_id=tenant_id,
+            )
+
+            db.add(webhook_model)
+            db.commit()
+
             return JSONResponse(
                 content={"success": True, "message": "Order created webhooks"},
                 status_code=200,
@@ -107,6 +120,18 @@ async def register_customer_webhook(
         response = requests.post(url, json=payload, headers=headers)
 
         if response.status_code == 201:
+            body = response.json()
+
+            webhook_model = models.Webhook(
+                id=body.id,
+                topic=body.topic,
+                created_at=body.created_at,
+                format=body.format,
+                tenant_id=tenant_id,
+            )
+
+            db.add(webhook_model)
+            db.commit()
             return JSONResponse(
                 content={"success": True, "message": "Customer created webhooks"},
                 status_code=200,
@@ -173,7 +198,10 @@ async def register_product_webhook(
 
 @router.post("/orders/create")
 async def save_order(req: Request, db: Session = Depends(get_db)):
-    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256", None)
+
+    if not hmac_header:
+        return
     body = await req.body()
 
     if not verify_webhook(body, hmac_header):
@@ -194,7 +222,6 @@ async def save_order(req: Request, db: Session = Depends(get_db)):
     if not tenant_id:
         return
 
-    # Check if order already exists (Idempotency)
     existing_order = db.execute(
         select(models.Order).where(models.Order.id == order.id)
     ).scalar_one_or_none()
@@ -203,27 +230,26 @@ async def save_order(req: Request, db: Session = Depends(get_db)):
         print(f"Order {order.id} already exists. Skipping.")
         return
 
-    # The original code only saved the first line item.
-    # To maintain the existing data model's integrity (assuming Order.id is a PK for the Order table),
-    # we will continue to only process the first line item.
-    if order.line_items:
-        first_line_item = order.line_items[0]
-        order_model = models.Order(
-            id=order.id,
-            tenant_id=tenant_id,
-            customer_id=order.customer.id,
-            variant_id=first_line_item.variant_id,
-            quantity=first_line_item.quantity,
-            created_at=order.created_at,
-        )
+    order_model = models.Order(
+        id=order.id,
+        tenant_id=tenant_id,
+        customer_id=order.customer.id,
+        variant_id=order.line_items[0].variant_id,
+        quantity=order.line_items[0].quantity,
+        created_at=order.created_at,
+    )
 
-        db.add(order_model)
-        db.commit()
+    db.add(order_model)
+    db.commit()
 
 
 @router.post("/products/create")
 async def save_product(req: Request, db: Session = Depends(get_db)):
-    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256", None)
+
+    if not hmac_header:
+        return
+
     body = await req.body()
 
     if not verify_webhook(body, hmac_header):
@@ -244,7 +270,6 @@ async def save_product(req: Request, db: Session = Depends(get_db)):
     if not tenant_id:
         return
 
-    # Check if product already exists
     existing_product = db.execute(
         select(models.Product).where(models.Product.id == product.id)
     ).scalar_one_or_none()
@@ -278,7 +303,10 @@ async def save_product(req: Request, db: Session = Depends(get_db)):
 
 @router.post("/customers/create")
 async def customer_product(req: Request, db: Session = Depends(get_db)):
-    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256")
+    hmac_header = req.headers.get("X-Shopify-Hmac-Sha256", None)
+
+    if not hmac_header:
+        return
     body = await req.body()
 
     if not verify_webhook(body, hmac_header):
@@ -308,7 +336,6 @@ async def customer_product(req: Request, db: Session = Depends(get_db)):
         print(f"Customer {customer.id} already exists. Skipping.")
         return
 
-    # Handle missing default address safely
     address_model = None
     if customer.default_address:
         address_model = models.Address(
