@@ -21,7 +21,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True
+    )
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="user")
 
@@ -34,11 +36,11 @@ class Tenant(Base):
     access_token: Mapped[str] = mapped_column(unique=True, nullable=False)
 
     user: Mapped["User"] = relationship(
-        "Tenant",
+        "User",
         uselist=False,
         passive_deletes=True,
         cascade="all, delete-orphan",
-        back_populates="user",
+        back_populates="tenant",
     )
 
     product: Mapped[List["Product"]] = relationship(
