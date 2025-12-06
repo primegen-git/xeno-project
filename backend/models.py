@@ -50,6 +50,10 @@ class Product(Base):
     tenant_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("tenants.id", ondelete="CASCADE")
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="product")
 
@@ -88,7 +92,6 @@ class Customer(Base):
     tenant_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("tenants.id", ondelete="CASCADE")
     )
-
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
     addresses: Mapped[List["Address"]] = relationship(
