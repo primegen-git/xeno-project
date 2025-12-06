@@ -111,7 +111,7 @@ class Customer(Base):
     )
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
-    addresses: Mapped["Address"] = relationship(
+    address: Mapped["Address"] = relationship(
         "Address",
         uselist=False,
         cascade="all, delete-orphan",
@@ -133,7 +133,7 @@ class Address(Base):
         BigInteger, ForeignKey("customers.id", ondelete="CASCADE")
     )
 
-    customer: Mapped["Customer"] = relationship("Customer", back_populates="addresses")
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="address")
 
 
 class Order(Base):
