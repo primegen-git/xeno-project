@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, Request
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 from utils import create_jwt_token, decode_jwt_token
 
@@ -115,4 +115,6 @@ async def callback(
 
     except Exception as e:
         print(f"Callback Error: {e}")
+        db.execute(delete(models.User).where(models.User.id == state))
+        db.commit()
         raise HTTPException(detail="Callback Failed", status_code=500)
