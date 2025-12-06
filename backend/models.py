@@ -111,9 +111,9 @@ class Customer(Base):
     )
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="customer")
 
-    addresses: Mapped[List["Address"]] = relationship(
+    addresses: Mapped["Address"] = relationship(
         "Address",
-        uselist=True,
+        uselist=False,
         cascade="all, delete-orphan",
         passive_deletes=True,
         back_populates="customer",
