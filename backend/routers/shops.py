@@ -9,10 +9,9 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-from utils import create_jwt_token
+from utils import create_jwt_token, decode_jwt_token
 
 load_dotenv()
-
 
 router = APIRouter()
 
@@ -30,26 +29,29 @@ if not CLIENT_ACCESS_KEY:
     print("access key does not exist")
     raise HTTPException(detail="Client Access Key is Unknown", status_code=500)
 
-BACKEND_URI = os.getenv("BACKEND_URI", None)
+REDIRECT_URI = os.getenv("REDIRECT_URI", None)
 if not CLIENT_ACCESS_KEY:
     print("redirect uri does not exist")
-    raise HTTPException(detail="Backend URI is Unknown", status_code=500)
+    raise HTTPException(detail="REDIRECT URI is Unknown", status_code=500)
 
 
 @router.get("/install")
-async def install(shop: str):
+async def install(shop: str, user_id=None):
     install_url = (
         f"https://{shop}/admin/oauth/authorize"
         f"?client_id={CLIENT_ID}"
-        f"&redirect_uri={BACKEND_URI}/shops/callback"
+        f"&redirect_uri={REDIRECT_URI}/shops/callback"
         f"&scope={scope}"
+        f"&state={user_id}"
     )
 
     return RedirectResponse(url=install_url)
 
 
 @router.get("/callback")
-async def callback(req: Request, shop: str, code: str, db: Session = Depends(get_db)):
+async def callback(
+    req: Request, shop: str, code: str, state=None, db: Session = Depends(get_db)
+):
     token_url = f"https://{shop}/admin/oauth/access_token"
     payload = {"client_id": CLIENT_ID, "client_secret": CLIENT_ACCESS_KEY, "code": code}
 
@@ -60,15 +62,14 @@ async def callback(req: Request, shop: str, code: str, db: Session = Depends(get
 
         access_token = data.get("access_token")
 
-        user_id = req.cookies.get(shop, None)
-
-        if user_id:
+        if state:
             new_tenant = models.Tenant(shop=shop, access_token=access_token)
             db.add(new_tenant)
+            db.commit()
             tenant_id = new_tenant.id
             db.execute(
                 update(models.User)
-                .where(models.User.id == user_id)
+                .where(models.User.id == state)
                 .values(tenant_id=tenant_id)
             )
             db.commit()
@@ -80,6 +81,8 @@ async def callback(req: Request, shop: str, code: str, db: Session = Depends(get
                 content={"success": True, "is_login": False}, status_code=200
             )
 
+            response.delete_cookie(shop)
+
             response.set_cookie(
                 key="token",
                 value=encoded_jwt,
@@ -90,14 +93,19 @@ async def callback(req: Request, shop: str, code: str, db: Session = Depends(get
 
             return response
 
-        tenant_id = req.cookies.get("tenant_id", None)
+        encoded_jwt = req.cookies.get("token", None)
+
+        if not encoded_jwt:
+            raise HTTPException(detail="UnAuthorized access", status_code=401)
+
+        tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
 
         if not tenant_id:
             raise HTTPException(detail="UnAuthorized access", status_code=401)
 
         db.execute(
             update(models.Tenant)
-            .where(models.Tenant.tenant_id == tenant_id)
+            .where(models.Tenant.id == tenant_id)
             .values(access_token=access_token)
         )
 
