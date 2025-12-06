@@ -1,6 +1,6 @@
 import models
 from database import get_db
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -25,11 +25,18 @@ class LoginModel(BaseModel):
 @router.post("/signup")
 async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
     existing_model = db.execute(
-        select(models.Tenant).where(models.Tenant.shop == payload.shop)
+        select(models.User).where(models.User.email == payload.email)
     ).scalar_one_or_none()
 
     if existing_model:
         raise HTTPException(status_code=409, detail="Account Already exist")
+
+    existing_model = db.execute(
+        select(models.Tenant).where(models.Tenant.shop == payload.shop)
+    ).scalar_one_or_none()
+
+    if existing_model:
+        raise HTTPException(status_code=409, detail="Shop Already exist")
 
     user_model = models.User(
         email=payload.email, hashed_password=get_hashed_password(payload.password)
@@ -37,24 +44,14 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
 
     db.add(user_model)
     db.commit()
-    db.refresh(user_model)
 
-    response = JSONResponse(
-        content={"success": True, "shop": payload.shop}, status_code=200
+    return JSONResponse(
+        content={"success": True, "shop": payload.shop, "user_id": user_model.id},
+        status_code=200,
     )
 
-    response.set_cookie(
-        key=payload.shop,
-        value=str(user_model.id),
-        secure=True,
-        samesite="none",
-        httponly=True,
-    )
 
-    return response
-
-
-@router.get("/login")
+@router.post("/login")
 async def login(payload: LoginModel, db: Session = Depends(get_db)):
     existing_user = db.execute(
         select(models.User).where(models.User.email == payload.email)
@@ -80,3 +77,9 @@ async def login(payload: LoginModel, db: Session = Depends(get_db)):
     )
 
     return response
+
+
+@router.get("/logout")
+async def logout(res: Response):
+    res.delete_cookie(key="token")
+    return JSONResponse(content="logout successfully", status_code=200)
