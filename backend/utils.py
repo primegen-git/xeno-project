@@ -11,7 +11,7 @@ from fastapi.exceptions import HTTPException
 from database import get_db
 import models
 from pydantic_models import CustomerResponse, OrderResponseModel, ProductResponse
-
+import bcrypt
 
 load_dotenv()
 
@@ -30,8 +30,12 @@ if JWT_ALGORITHM is None:
     raise HTTPException(detail="JWT Algorithm is Unknown", status_code=500)
 
 
-def get_hashed_password(password):
-    return password
+def get_hashed_password(plain_text_password):
+    return bcrypt.hashpw(plain_text_password, bcrypt.gensalt())
+
+
+def check_password(plain_text_password, hashed_password):
+    return bcrypt.checkpw(plain_text_password, hashed_password)
 
 
 def create_jwt_token(payload: Dict):
