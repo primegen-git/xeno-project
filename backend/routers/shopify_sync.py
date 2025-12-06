@@ -1,32 +1,18 @@
-from fastapi import APIRouter, Depends, Request, Response
-from fastapi.exceptions import HTTPException
-from utils import fetch_data_from_shopify, decode_jwt_token
-import models
-from sqlalchemy.orm import Session
-from database import get_db
 from datetime import timezone
 
+import models
+from database import get_db
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.exceptions import HTTPException
+from sqlalchemy.orm import Session
+from utils import fetch_data_from_shopify, get_tenant_id_and_access_token
 
 router = APIRouter()
 
 
-def get_tenant_id(req):
-    encoded_jwt_token = req.cookies.get("token", None)
-    if encoded_jwt_token is None:
-        raise HTTPException(status_code=401, detail="User is unauthorized.")
-
-    payload = decode_jwt_token(encoded_jwt_token)
-
-    tenant_id = payload["tenant_id"]
-
-    access_token = payload["access_token"]
-
-    return (tenant_id, access_token)
-
-
 @router.get("/customers")
 async def get_customers(req: Request, shop: str, db: Session = Depends(get_db)):
-    tenant_id, access_token = get_tenant_id(req)
+    tenant_id, access_token = get_tenant_id_and_access_token(req, db)
 
     if tenant_id is None:
         raise HTTPException(status_code=500, detail="Internal Server Error.")
@@ -85,7 +71,7 @@ async def get_customers(req: Request, shop: str, db: Session = Depends(get_db)):
 
 @router.get("/products")
 async def get_products(req: Request, shop: str, db: Session = Depends(get_db)):
-    tenant_id, access_token = get_tenant_id(req)
+    tenant_id, access_token = get_tenant_id_and_access_token(req, db)
 
     if tenant_id is None:
         raise HTTPException(status_code=500, detail="Internal Server Error.")
@@ -145,7 +131,7 @@ async def get_products(req: Request, shop: str, db: Session = Depends(get_db)):
 
 @router.get("/orders")
 async def get_orders(req: Request, shop: str, db: Session = Depends(get_db)):
-    tenant_id, access_token = get_tenant_id(req)
+    tenant_id, access_token = get_tenant_id_and_access_token(req, db)
 
     if tenant_id is None:
         raise HTTPException(status_code=500, detail="Internal Server Error.")
