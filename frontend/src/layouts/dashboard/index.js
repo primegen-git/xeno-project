@@ -1,21 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-
-// @mui material components
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import SimpleLineChart from "examples/Charts/LineCharts/SimpleLineChart";
-
-// Dashboard components
 import Projects from "layouts/dashboard/components/Projects";
-
 function Dashboard() {
   const { state } = useLocation();
   const [stats, setStats] = useState({
@@ -24,7 +15,6 @@ function Dashboard() {
     orders: 0,
   });
   const [topCustomers, setTopCustomers] = useState([]);
-
   useEffect(() => {
     if (state?.data) {
       setStats(state.data.stats);
@@ -38,7 +28,6 @@ function Dashboard() {
             axios.get("http://localhost:8000/fetch/total_orders", { withCredentials: true }),
             axios.get("http://localhost:8000/fetch/top_customers", { withCredentials: true }),
           ]);
-
           setStats({
             customers: customersRes.data,
             products: productsRes.data,
@@ -49,11 +38,9 @@ function Dashboard() {
           console.error("Error fetching dashboard data", error);
         }
       };
-
       fetchData();
     }
   }, [state]);
-
   const ordersChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
@@ -64,7 +51,6 @@ function Dashboard() {
       },
     ],
   };
-
   const revenueChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
@@ -75,7 +61,6 @@ function Dashboard() {
       },
     ],
   };
-
   return (
     <DashboardLayout>
       <MDBox py={3}>
@@ -148,5 +133,4 @@ function Dashboard() {
     </DashboardLayout>
   );
 }
-
 export default Dashboard;

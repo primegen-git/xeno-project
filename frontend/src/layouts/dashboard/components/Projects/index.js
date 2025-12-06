@@ -1,21 +1,12 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-
-// @mui material components
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-
-// Material Dashboard 2 React examples
 import DataTable from "examples/Tables/DataTable";
-
-// Data
-
 function Projects({ topCustomers }) {
   const columns = [
     { Header: "Customer", accessor: "customer", width: "45%", align: "left" },
@@ -23,7 +14,6 @@ function Projects({ topCustomers }) {
     { Header: "Total Spent", accessor: "total_spent", align: "center" },
     { Header: "Total Quantity", accessor: "total_quantity", align: "center" },
   ];
-
   const rows = (topCustomers || []).map((customer) => ({
     customer: (
       <MDBox display="flex" alignItems="center" lineHeight={1}>
@@ -48,7 +38,6 @@ function Projects({ topCustomers }) {
       </MDTypography>
     ),
   }));
-
   return (
     <Card>
       <MDBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
@@ -70,9 +59,7 @@ function Projects({ topCustomers }) {
     </Card>
   );
 }
-
 Projects.propTypes = {
   topCustomers: PropTypes.arrayOf(PropTypes.object),
 };
-
 export default Projects;

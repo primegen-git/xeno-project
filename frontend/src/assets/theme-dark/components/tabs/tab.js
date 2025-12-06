@@ -1,30 +1,10 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// Material Dashboard 2 React base styles
 import typography from "assets/theme-dark/base/typography";
 import borders from "assets/theme-dark/base/borders";
 import colors from "assets/theme-dark/base/colors";
-
-// Material Dashboard 2 React helper functions
 import pxToRem from "assets/theme-dark/functions/pxToRem";
-
 const { size, fontWeightRegular } = typography;
 const { borderRadius } = borders;
 const { white } = colors;
-
 const tab = {
   styleOverrides: {
     root: {
@@ -44,22 +24,18 @@ const tab = {
       borderRadius: borderRadius.lg,
       color: `${white.main} !important`,
       opacity: "1 !important",
-
       "& .material-icons, .material-icons-round": {
         marginBottom: "0 !important",
         marginRight: pxToRem(6),
       },
-
       "& svg": {
         marginBottom: "0 !important",
         marginRight: pxToRem(6),
       },
     },
-
     labelIcon: {
       paddingTop: pxToRem(4),
     },
   },
 };
-
 export default tab;

@@ -1,25 +1,17 @@
 import { useState } from "react";
 import axios from "axios";
-
-// @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import TextField from "@mui/material/TextField";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DataTable from "examples/Tables/DataTable";
-
 function FilterByDate() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [rows, setRows] = useState([]);
-
   const columns = [
     { Header: "Order ID", accessor: "id", align: "left" },
     { Header: "Customer ID", accessor: "customer_id", align: "left" },
@@ -27,17 +19,14 @@ function FilterByDate() {
     { Header: "Quantity", accessor: "quantity", align: "center" },
     { Header: "Created At", accessor: "created_at", align: "center" },
   ];
-
   const handleFilter = async () => {
     try {
       let query = "";
       if (startDate) query += `?start_date=${startDate}`;
       if (endDate) query += `${query ? "&" : "?"}end_date=${endDate}`;
-
       const response = await axios.get(`http://localhost:8000/fetch/orders${query}`, {
         withCredentials: true,
       });
-
       const formattedRows = response.data.map((order) => ({
         id: order.id,
         customer_id: order.customer_id,
@@ -45,13 +34,11 @@ function FilterByDate() {
         quantity: order.quantity,
         created_at: new Date(order.created_at).toLocaleString(),
       }));
-
       setRows(formattedRows);
     } catch (error) {
       console.error("Error fetching orders", error);
     }
   };
-
   return (
     <DashboardLayout>
       <MDBox pt={6} pb={3}>
@@ -113,5 +100,4 @@ function FilterByDate() {
     </DashboardLayout>
   );
 }
-
 export default FilterByDate;

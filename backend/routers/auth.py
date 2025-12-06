@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database import get_db
 import models
-from utils import hashed_password
+from utils import get_hashed_password
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Account Already exist")
 
     user_model = models.User(
-        email=payload.email, hashed_passwrod=hashed_password(payload.password)
+        email=payload.email, hashed_passwrod=get_hashed_password(payload.password)
     )
 
     db.add(user_model)
@@ -51,3 +51,20 @@ async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
     )
 
     return response
+
+
+@router.get("/login")
+async def login(payload: LoginModel, db: Session = Depends(get_db)):
+    existing_user = db.execute(
+        select(models.User).where(models.User.email == payload.email)
+    ).scalar_one_or_none()
+
+    if not existing_user:
+        raise HTTPException(detail="User does not exist", status_code=404)
+
+    hashed_password = get_hashed_password(payload.password)
+
+    if existing_user.hashed_password != hashed_password:
+        raise HTTPException(detail="Password does not match", status_code=401)
+
+    return JSONResponse(content={"success": True}, status_code=200)

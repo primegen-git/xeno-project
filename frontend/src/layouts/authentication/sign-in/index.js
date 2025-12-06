@@ -1,28 +1,19 @@
 import { useState } from "react";
-
-// @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-
-// Authentication layout components
 import BasicLayout from "layouts/authentication/components/BasicLayout";
-
 function Basic() {
   const [shopName, setShopName] = useState("");
-
   const handleSignIn = () => {
     if (shopName) {
       localStorage.setItem("shop_name", shopName);
       window.location.href = `http://localhost:8000/shops/install?shop=${shopName}`;
     }
   };
-
   return (
     <BasicLayout>
       <Card>
@@ -72,5 +63,4 @@ function Basic() {
     </BasicLayout>
   );
 }
-
 export default Basic;

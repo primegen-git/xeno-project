@@ -30,6 +30,10 @@ if JWT_ALGORITHM is None:
     raise HTTPException(detail="JWT Algorithm is Unknown", status_code=500)
 
 
+def hashed_password(password):
+    return "password_hashed"
+
+
 def create_jwt_token(payload: Dict):
     encoded_jwt = jwt.encode(payload, key=JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt

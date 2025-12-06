@@ -1,24 +1,5 @@
-/**
-=========================================================
-* Material Dashboard 2  React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import { useMemo } from "react";
-
-// porp-types is a library for typechecking of props
 import PropTypes from "prop-types";
-
-// react-chartjs-2 components
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -31,21 +12,12 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-
-// @mui material components
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-
-// DefaultLineChart configurations
 import configs from "examples/Charts/LineCharts/DefaultLineChart/configs";
-
-// Material Dashboard 2 React base styles
 import colors from "assets/theme/base/colors";
-
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -56,7 +28,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
 function DefaultLineChart({ icon, title, description, height, chart }) {
   const chartDatasets = chart.datasets
     ? chart.datasets.map((dataset) => ({
@@ -75,9 +46,7 @@ function DefaultLineChart({ icon, title, description, height, chart }) {
         maxBarThickness: 6,
       }))
     : [];
-
   const { data, options } = configs(chart.labels || [], chartDatasets);
-
   const renderChart = (
     <MDBox py={2} pr={2} pl={icon.component ? 1 : 2}>
       {title || description ? (
@@ -120,19 +89,14 @@ function DefaultLineChart({ icon, title, description, height, chart }) {
       )}
     </MDBox>
   );
-
   return title || description ? <Card>{renderChart}</Card> : renderChart;
 }
-
-// Setting default values for the props of DefaultLineChart
 DefaultLineChart.defaultProps = {
   icon: { color: "info", component: "" },
   title: "",
   description: "",
   height: "19.125rem",
 };
-
-// Typechecking props for the DefaultLineChart
 DefaultLineChart.propTypes = {
   icon: PropTypes.shape({
     color: PropTypes.oneOf([
@@ -152,5 +116,4 @@ DefaultLineChart.propTypes = {
   height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   chart: PropTypes.objectOf(PropTypes.array).isRequired,
 };
-
 export default DefaultLineChart;
