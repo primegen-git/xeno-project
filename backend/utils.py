@@ -1,6 +1,10 @@
 import os
 import time
 from typing import Dict
+import hmac
+import hashlib
+import base64
+
 
 from passlib.hash import argon2
 import jwt
@@ -141,3 +145,16 @@ def get_tenant_id_and_access_token(req, db):
             status_code=500,
             detail=f"Error in getting tenant_id and access key\nError: {e}",
         )
+
+
+SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "")
+
+
+def verify_webhook(data: bytes, hmac_header: str) -> bool:
+    digest = hmac.new(
+        SHOPIFY_API_SECRET.encode("utf-8"), data, hashlib.sha256
+    ).digest()
+    computed_hmac = base64.b64encode(digest).decode("utf-8")
+
+    return hmac.compare_digest(computed_hmac, hmac_header)
+
