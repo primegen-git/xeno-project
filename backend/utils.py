@@ -1,17 +1,18 @@
 import os
 import time
 from typing import Dict
+
+from passlib.hash import argon2
 import jwt
-from dotenv import load_dotenv
+import models
 import requests
-from sqlalchemy import Select, select
-from sqlalchemy.orm import Session
+from database import get_db
+from dotenv import load_dotenv
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
-from database import get_db
-import models
 from pydantic_models import CustomerResponse, OrderResponseModel, ProductResponse
-import bcrypt
+from sqlalchemy import Select, select
+from sqlalchemy.orm import Session
 
 load_dotenv()
 
@@ -30,12 +31,12 @@ if JWT_ALGORITHM is None:
     raise HTTPException(detail="JWT Algorithm is Unknown", status_code=500)
 
 
-def get_hashed_password(plain_text_password):
-    return bcrypt.hashpw(plain_text_password, bcrypt.gensalt())
+def get_hashed_password(password: str) -> str:
+    return argon2.hash(password)
 
 
-def check_password(plain_text_password, hashed_password):
-    return bcrypt.checkpw(plain_text_password, hashed_password)
+def verify_password(password: str, hashed: str) -> bool:
+    return argon2.verify(password, hashed)
 
 
 def create_jwt_token(payload: Dict):
@@ -102,6 +103,8 @@ def fetch_data_from_shopify(shop, resource, access_token):
                         idx1 = section[0].find("<")
                         idx2 = section[0].find(">")
                         url = section[0][idx1 + 1 : idx2]
+                    else:
+                        url = None
             else:
                 url = None
 
