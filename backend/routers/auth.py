@@ -22,7 +22,7 @@ class LoginModel(BaseModel):
     password: str
 
 
-@router.post("signup/")
+@router.post("/signup")
 async def signup(payload: SignUPModel, db: Session = Depends(get_db)):
     existing_model = db.execute(
         select(models.Tenant).where(models.Tenant.shop == payload.shop)
