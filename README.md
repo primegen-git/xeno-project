@@ -206,9 +206,9 @@ xeno-project/
 │   │   ├── components/   # Reusable UI components (MDBox, MDButton, etc.)
 │   │   ├── layouts/      # Page layouts (Dashboard, Auth, FilterByDate)
 │   │   ├── examples/     # Layout components (Sidenav, Navbar)
-│   │   ├── assets/       # Images and themes
 │   │   └── routes.js     # Frontend routing configuration
 │   └── package.json      # Frontend dependencies and scripts
+└── assets/               # images
 └── README.md             # Project documentation
 ```
 
