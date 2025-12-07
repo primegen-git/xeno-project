@@ -26,14 +26,13 @@ if not BACKEND_URI:
 
 def delete_webhook(req, db, resource):
     encoded_jwt = req.cookies.get("token", None)
-
     tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
 
     if not tenant_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    webhook_id = db.execute(
-        select(models.Webhook.id)
+    webhook_model = db.execute(
+        select(models.Webhook)  # Select the whole model
         .where(models.Webhook.tenant_id == tenant_id)
         .where(models.Webhook.topic == f"{resource}/create")
     ).scalar_one_or_none()
@@ -43,10 +42,12 @@ def delete_webhook(req, db, resource):
     if not tenant_model:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    if not webhook_id:
-        raise HTTPException(status_code=500, detail="webhook does not exist")
+    if not webhook_model:
+        return JSONResponse(
+            status_code=200, content={"message": "Webhook not found in DB"}
+        )
 
-    url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks/{webhook_id}.json"
+    url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks/{webhook_model.id}.json"
 
     headers = {
         "X-Shopify-Access-Token": tenant_model.access_token,
@@ -54,26 +55,61 @@ def delete_webhook(req, db, resource):
 
     response = requests.delete(url, headers=headers)
 
+    if response.status_code == 200 or response.status_code == 404:
+        db.delete(webhook_model)  # <--- The missing line
+        db.commit()
+        return response
+
     return response
 
 
+@router.get("/check")
+async def check_webhook_exist(req: Request, db: Session = Depends(get_db)):
+    encoded_jwt = req.cookies.get("token", None)
+
+    if not encoded_jwt:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
+
+    if not tenant_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    content = {}
+
+    webhooks = db.scalars(
+        select(models.Webhook).where(models.Webhook.tenant_id == tenant_id)
+    ).all()
+
+    for webhook in webhooks:
+        if webhook.topic == "orders/create":
+            content["orders"] = True
+        elif webhook.topic == "products/create":
+            content["products"] = True
+        elif webhook.topic == "customers/create":
+            content["customers"] = True
+
+    return JSONResponse(content=content, status_code=200)
+
+
 @router.get("/register/order/create")
-async def register_order_webhook(
-    req: Request, shop: str, db: Session = Depends(get_db)
-):
+async def register_order_webhook(req: Request, db: Session = Depends(get_db)):
     try:
         encoded_jwt = req.cookies.get("token", None)
 
         if not encoded_jwt:
-            raise HTTPException(status_code=401, detail="UnAuthorize")
+            raise HTTPException(status_code=401, detail="Unauthorize")
 
-        tenant_id = decode_jwt_token(encoded_jwt)["tenant_id"]
+        tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
 
-        access_token = db.execute(
-            select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
+        if not tenant_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        tenant_model = db.execute(
+            select(models.Tenant).where(models.Tenant.id == tenant_id)
         ).scalar_one()
 
-        url = f"https://{shop}/admin/api/2024-10/webhooks.json"
+        url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks.json"
 
         payload = {
             "webhook": {
@@ -84,14 +120,22 @@ async def register_order_webhook(
         }
 
         headers = {
-            "X-Shopify-Access-Token": access_token,
+            "X-Shopify-Access-Token": tenant_model.access_token,
             "Content-Type": "application/json",
         }
 
         response = requests.post(url, json=payload, headers=headers)
 
+        print(url)
+        print(payload)
+        print(headers)
+
+        print(response.status_code)
+
         if response.status_code == 201:
-            body = response.json()
+            body = response.json()["webhook"]
+            print(body)
+            print(response)
 
             webhook_model = models.Webhook(
                 id=body.id,
@@ -111,7 +155,7 @@ async def register_order_webhook(
         if response.status_code == 422:
             return JSONResponse(
                 content={"success": True, "message": "Webhook already exist"},
-                status_code=200,
+                status_code=409,
             )
         response.raise_for_status()
     except Exception as e:
@@ -120,22 +164,23 @@ async def register_order_webhook(
 
 
 @router.get("/register/customer/create")
-async def register_customer_webhook(
-    req: Request, shop: str, db: Session = Depends(get_db)
-):
+async def register_customer_webhook(req: Request, db: Session = Depends(get_db)):
     try:
         encoded_jwt = req.cookies.get("token", None)
 
         if not encoded_jwt:
             raise HTTPException(status_code=401, detail="UnAuthorize")
 
-        tenant_id = decode_jwt_token(encoded_jwt)["tenant_id"]
+        tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
 
-        access_token = db.execute(
-            select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
+        if not tenant_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        tenant_model = db.execute(
+            select(models.Tenant).where(models.Tenant.id == tenant_id)
         ).scalar_one()
 
-        url = f"https://{shop}/admin/api/2024-10/webhooks.json"
+        url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks.json"
 
         payload = {
             "webhook": {
@@ -146,14 +191,14 @@ async def register_customer_webhook(
         }
 
         headers = {
-            "X-Shopify-Access-Token": access_token,
+            "X-Shopify-Access-Token": tenant_model.access_token,
             "Content-Type": "application/json",
         }
 
         response = requests.post(url, json=payload, headers=headers)
 
         if response.status_code == 201:
-            body = response.json()
+            body = response.json()["webhook"]
 
             webhook_model = models.Webhook(
                 id=body.id,
@@ -181,22 +226,23 @@ async def register_customer_webhook(
 
 
 @router.get("/register/product/create")
-async def register_product_webhook(
-    req: Request, shop: str, db: Session = Depends(get_db)
-):
+async def register_product_webhook(req: Request, db: Session = Depends(get_db)):
     try:
         encoded_jwt = req.cookies.get("token", None)
 
         if not encoded_jwt:
             raise HTTPException(status_code=401, detail="UnAuthorize")
 
-        tenant_id = decode_jwt_token(encoded_jwt)["tenant_id"]
+        tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
 
-        access_token = db.execute(
-            select(models.Tenant.access_token).where(models.Tenant.id == tenant_id)
+        if not tenant_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        tenant_model = db.execute(
+            select(models.Tenant).where(models.Tenant.id == tenant_id)
         ).scalar_one()
 
-        url = f"https://{shop}/admin/api/2024-10/webhooks.json"
+        url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks.json"
 
         payload = {
             "webhook": {
@@ -207,13 +253,26 @@ async def register_product_webhook(
         }
 
         headers = {
-            "X-Shopify-Access-Token": access_token,
+            "X-Shopify-Access-Token": tenant_model.access_token,
             "Content-Type": "application/json",
         }
 
         response = requests.post(url, json=payload, headers=headers)
 
         if response.status_code == 201:
+            body = response.json()["webhook"]
+
+            webhook_model = models.Webhook(
+                id=body.id,
+                topic=body.topic,
+                created_at=body.created_at,
+                format=body.format,
+                tenant_id=tenant_id,
+            )
+
+            db.add(webhook_model)
+            db.commit()
+
             return JSONResponse(
                 content={"success": True, "message": "Product created webhooks"},
                 status_code=200,
@@ -360,7 +419,6 @@ async def customer_product(req: Request, db: Session = Depends(get_db)):
     if not tenant_id:
         return
 
-    # Check if customer already exists
     existing_customer = db.execute(
         select(models.Customer).where(models.Customer.id == customer.id)
     ).scalar_one_or_none()
