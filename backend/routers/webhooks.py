@@ -24,6 +24,39 @@ if not BACKEND_URI:
     raise HTTPException(detail="BACKEND_URI does not exist", status_code=500)
 
 
+def delete_webhook(req, db, resource):
+    encoded_jwt = req.cookies.get("token", None)
+
+    tenant_id = decode_jwt_token(encoded_jwt=encoded_jwt).get("tenant_id", None)
+
+    if not tenant_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    webhook_id = db.execute(
+        select(models.Webhook.id)
+        .where(models.Webhook.tenant_id == tenant_id)
+        .where(models.Webhook.topic == f"{resource}/create")
+    ).scalar_one_or_none()
+
+    tenant_model = db.get(models.Tenant, tenant_id)
+
+    if not tenant_model:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if not webhook_id:
+        raise HTTPException(status_code=500, detail="webhook does not exist")
+
+    url = f"https://{tenant_model.shop}/admin/api/2024-10/webhooks/{webhook_id}.json"
+
+    headers = {
+        "X-Shopify-Access-Token": tenant_model.access_token,
+    }
+
+    response = requests.delete(url, headers=headers)
+
+    return response
+
+
 @router.get("/register/order/create")
 async def register_order_webhook(
     req: Request, shop: str, db: Session = Depends(get_db)
@@ -359,3 +392,40 @@ async def customer_product(req: Request, db: Session = Depends(get_db)):
 
     db.add(customer_model)
     db.commit()
+
+
+@router.delete("/order")
+async def delete_order_webhook(req: Request, db: Session = Depends(get_db)):
+    response = delete_webhook(req, db, "orders")
+
+    if response.status_code == 200:
+        return JSONResponse(
+            content={"success": True, "message": "order created webhook deleted"}
+        )
+
+    else:
+        return JSONResponse(status_code=response.status_code, content=response.json())
+
+
+@router.delete("/product")
+async def delete_product_webhook(req: Request, db: Session = Depends(get_db)):
+    response = delete_webhook(req, db, "products")
+
+    if response.status_code == 200:
+        return JSONResponse(
+            content={"success": True, "message": "product created webhook deleted"}
+        )
+    else:
+        return JSONResponse(status_code=response.status_code, content=response.json())
+
+
+@router.delete("/customer")
+async def delete_customer_webhook(req: Request, db: Session = Depends(get_db)):
+    response = delete_webhook(req, db, "customers")
+
+    if response.status_code == 200:
+        return JSONResponse(
+            content={"success": True, "message": "customer created webhook deleted"}
+        )
+    else:
+        return JSONResponse(status_code=response.status_code, content=response.json())
