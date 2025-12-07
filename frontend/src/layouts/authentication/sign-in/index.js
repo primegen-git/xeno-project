@@ -20,7 +20,22 @@ function Basic() {
     }
   }, [location.state]);
 
-}
+  const handleSignIn = async () => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        const shop = response.data.shop;
+        window.location.href = `${process.env.REACT_APP_BACKEND_URL}/shops/install?shop=${shop}&user_id=`;
+      }
+    } catch (error) {
+      console.error("Login failed", error);
+      alert("Login failed. Please check your credentials.");
+    }
+  };
 
   return (
     <BasicLayout>
