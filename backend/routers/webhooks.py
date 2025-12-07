@@ -56,7 +56,7 @@ def delete_webhook(req, db, resource):
     response = requests.delete(url, headers=headers)
 
     if response.status_code == 200 or response.status_code == 404:
-        db.delete(webhook_model)  # <--- The missing line
+        db.delete(webhook_model)
         db.commit()
         return response
 
@@ -126,22 +126,14 @@ async def register_order_webhook(req: Request, db: Session = Depends(get_db)):
 
         response = requests.post(url, json=payload, headers=headers)
 
-        print(url)
-        print(payload)
-        print(headers)
-
-        print(response.status_code)
-
         if response.status_code == 201:
             body = response.json()["webhook"]
-            print(body)
-            print(response)
 
             webhook_model = models.Webhook(
-                id=body.id,
-                topic=body.topic,
-                created_at=body.created_at,
-                format=body.format,
+                id=body["id"],
+                topic=body["topic"],
+                created_at=body["created_at"],
+                format=body["format"],
                 tenant_id=tenant_id,
             )
 
@@ -201,10 +193,10 @@ async def register_customer_webhook(req: Request, db: Session = Depends(get_db))
             body = response.json()["webhook"]
 
             webhook_model = models.Webhook(
-                id=body.id,
-                topic=body.topic,
-                created_at=body.created_at,
-                format=body.format,
+                id=body["id"],
+                topic=body["topic"],
+                created_at=body["created_at"],
+                format=body["format"],
                 tenant_id=tenant_id,
             )
 
@@ -263,10 +255,10 @@ async def register_product_webhook(req: Request, db: Session = Depends(get_db)):
             body = response.json()["webhook"]
 
             webhook_model = models.Webhook(
-                id=body.id,
-                topic=body.topic,
-                created_at=body.created_at,
-                format=body.format,
+                id=body["id"],
+                topic=body["topic"],
+                created_at=body["created_at"],
+                format=body["format"],
                 tenant_id=tenant_id,
             )
 
@@ -469,21 +461,33 @@ async def delete_order_webhook(req: Request, db: Session = Depends(get_db)):
 async def delete_product_webhook(req: Request, db: Session = Depends(get_db)):
     response = delete_webhook(req, db, "products")
 
-    if response.status_code == 200:
+    if response.status_code in (200, 204):
         return JSONResponse(
-            content={"success": True, "message": "product created webhook deleted"}
+            content={"success": True, "message": "Product webhook deleted"},
+            status_code=200,
         )
-    else:
-        return JSONResponse(status_code=response.status_code, content=response.json())
+
+    try:
+        error_body = response.json()
+    except Exception:
+        error_body = {"error": "Unknown error from Shopify"}
+
+    return JSONResponse(status_code=response.status_code, content=error_body)
 
 
 @router.delete("/customer")
 async def delete_customer_webhook(req: Request, db: Session = Depends(get_db)):
     response = delete_webhook(req, db, "customers")
 
-    if response.status_code == 200:
+    if response.status_code in (200, 204):
         return JSONResponse(
-            content={"success": True, "message": "customer created webhook deleted"}
+            content={"success": True, "message": "Customer webhook deleted"},
+            status_code=200,
         )
-    else:
-        return JSONResponse(status_code=response.status_code, content=response.json())
+
+    try:
+        error_body = response.json()
+    except Exception:
+        error_body = {"error": "Unknown error from Shopify"}
+
+    return JSONResponse(status_code=response.status_code, content=error_body)
