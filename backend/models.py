@@ -170,7 +170,7 @@ class Webhook(Base):
     __tablename__ = "webhooks"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    topic: Mapped[str] = mapped_column()
+    topic: Mapped[str] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         index=True,
