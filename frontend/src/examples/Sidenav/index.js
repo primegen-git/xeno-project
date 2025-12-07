@@ -42,17 +42,72 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   }, [dispatch, location]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const [webhooks, setWebhooks] = useState({
+    orders: false,
+    products: false,
+    customers: false,
+  });
+
   useEffect(() => {
     const checkAuth = () => {
       const shopName = localStorage.getItem("shop_name");
       setIsLoggedIn(!!shopName);
     };
 
+    const checkWebhooks = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/webhooks/check`, {
+          withCredentials: true,
+        });
+        if (response.data) {
+          setWebhooks({
+            orders: !!response.data.orders,
+            products: !!response.data.products,
+            customers: !!response.data.customers,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to check webhooks", error);
+      }
+    };
+
     window.addEventListener("auth-change", checkAuth);
     checkAuth();
 
+    if (isLoggedIn) {
+      checkWebhooks();
+    }
+
     return () => window.removeEventListener("auth-change", checkAuth);
-  }, [location]);
+  }, [location, isLoggedIn]);
+
+  const toggleWebhook = async (resource) => {
+    const isRegistered = webhooks[resource];
+    try {
+      if (isRegistered) {
+        // Delete
+        // Resource name mapping: orders -> order, products -> product, customers -> customer
+        const endpoint = resource.slice(0, -1);
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/webhooks/${endpoint}`, {
+          withCredentials: true,
+        });
+      } else {
+        // Register
+        // Resource name mapping: orders -> order, products -> product, customers -> customer
+        const endpoint = resource.slice(0, -1);
+        await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/webhooks/register/${endpoint}/create`,
+          {
+            withCredentials: true,
+          }
+        );
+      }
+      // Toggle state locally on success
+      setWebhooks((prev) => ({ ...prev, [resource]: !isRegistered }));
+    } catch (error) {
+      console.error(`Failed to toggle webhook ${resource}`, error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -156,8 +211,35 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       />
       <List>{renderRoutes}</List>
       {isLoggedIn && (
-        <MDBox p={2} mt="auto">
-          <MDButton variant="gradient" color="info" fullWidth onClick={handleLogout}>
+        <MDBox p={2} mt="auto" display="flex" flexDirection="column">
+          <MDButton
+            variant="gradient"
+            color={webhooks.orders ? "error" : "info"}
+            fullWidth
+            onClick={() => toggleWebhook("orders")}
+            sx={{ mb: 1, fontSize: "0.75rem" }}
+          >
+            {webhooks.orders ? "Remove Orders Webhook" : "Add Orders Webhook"}
+          </MDButton>
+          <MDButton
+            variant="gradient"
+            color={webhooks.products ? "error" : "info"}
+            fullWidth
+            onClick={() => toggleWebhook("products")}
+            sx={{ mb: 1, fontSize: "0.75rem" }}
+          >
+            {webhooks.products ? "Remove Products Webhook" : "Add Products Webhook"}
+          </MDButton>
+          <MDButton
+            variant="gradient"
+            color={webhooks.customers ? "error" : "info"}
+            fullWidth
+            onClick={() => toggleWebhook("customers")}
+            sx={{ mb: 2, fontSize: "0.75rem" }}
+          >
+            {webhooks.customers ? "Remove Customers Webhook" : "Add Customers Webhook"}
+          </MDButton>
+          <MDButton variant="gradient" color="error" fullWidth onClick={handleLogout}>
             Logout
           </MDButton>
         </MDBox>
