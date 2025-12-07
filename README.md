@@ -14,6 +14,9 @@ This service connects to a Shopify store, ingests data (Customers, Products, Ord
 - **Advanced Filtering**: Dedicated "Filter by Date" page to analyze metrics for specific time ranges.
 - **Authentication**: Secure Email/Password login system using JWT (JSON Web Tokens).
 - **Data Management**: A suite of Python scripts to generate realistic dummy data and clean up the Shopify environment for testing.
+- **Real-time Updates**:
+  - **Webhooks**: Automatically listens for data changes (Create/Delete) in Shopify for Orders, Products, and Customers.
+  - **Server-Sent Events (SSE)**: Pushes real-time updates to the frontend dashboard instantly when new data is received via webhooks, ensuring the UI is always in sync without manual refreshes.
 
 ## Tech Stack
 - **Frontend**: 
@@ -161,33 +164,33 @@ python backend/scripts/delete_customers.py
 
 ### 1. Signup
 Create a new account to access the dashboard.
-![Signup Flow](frontend/src/assets/images/signup_flow.png)
+![Signup Flow](assets/sign_up.png)
 
 ### 2. Token Acquisition Flow
 Connect your Shopify store using OAuth 2.0.
-![Token Acquisition Flow](frontend/src/assets/images/token_acquisition.png)
+![Token Acquisition Flow](assets/oauth_acquisition.png)
 
 #### 2.1 Permission Prompt
 Authorize the application to access your store's data.
-![Permission Prompt](frontend/src/assets/images/permission_prompt.png)
+![Permission Prompt](assets/permission_prompt.png)
 
 ### 3. Fetch and Sync
 Automatically ingest Customers, Products, and Orders from Shopify.
-![Fetch and Sync](frontend/src/assets/images/fetch_sync.png)
+![Fetch and Sync](assets/fetch_sync.png)
 
 ### 4. Dashboard
 Visualize key metrics and sales trends.
-![Dashboard](frontend/src/assets/images/dashboard.png)
+![Dashboard](assets/dashboard.png)
 
 ### 5. Filter by Date
 Analyze data for specific time periods.
-![Filter by Date](frontend/src/assets/images/filter_by_date.png)
+![Filter by Date](assets/filter_by_date.png)
 
-## 🗄️ Database Schema
+## ️ Database Schema
 The application uses a relational database (PostgreSQL) with the following schema design to support multi-tenancy and data integrity.
-![Database Schema](frontend/src/assets/images/database_schema.png)
+![Database Schema](assets/database_schema.png)
 
-## 📂 Project Structure
+##  Project Structure
 ```
 xeno-project/
 ├── backend/
