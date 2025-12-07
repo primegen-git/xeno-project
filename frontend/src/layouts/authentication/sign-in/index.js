@@ -15,11 +15,11 @@ function Basic() {
 
   useEffect(() => {
     if (location.state?.demo) {
-      setEmail("admin@123.com");
+      setEmail("admin@gmail.com");
       setPassword("admin123");
       // Use a timeout to ensure state is updated before submitting, or just call login directly with values
       // Better to call login directly with the values to avoid race conditions with state updates
-      handleSignIn("admin@123.com", "admin123");
+      handleSignIn("admin@gmail.com", "admin123");
     }
   }, [location.state]);
 
