@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    models.Base.metadata.create_all(bind=engine)
+    # models.Base.metadata.create_all(bind=engine)  # should not be run in production.
     yield
 
 
