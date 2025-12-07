@@ -119,12 +119,7 @@ function Dashboard() {
       withCredentials: true,
     });
 
-    eventSource.onopen = () => {
-      console.log("SSE Connection Opened");
-    };
-
     eventSource.onmessage = (event) => {
-      console.log("SSE Message Received:", event.data);
       const message = event.data;
       if (message === "customer_created") {
         setStats((prev) => ({ ...prev, customers: prev.customers + 1 }));
@@ -133,11 +128,6 @@ function Dashboard() {
       } else if (message === "order_created") {
         fetchData();
       }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      eventSource.close();
     };
 
     return () => {
