@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -9,6 +9,7 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 import axios from "axios";
 
 function Cover() {
+  const navigate = useNavigate();
   const [shop, setShop] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,6 +112,16 @@ function Cover() {
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth onClick={handleSignUp}>
                 sign up
+              </MDButton>
+            </MDBox>
+            <MDBox mt={2} mb={1}>
+              <MDButton
+                variant="outlined"
+                color="info"
+                fullWidth
+                onClick={() => navigate("/authentication/sign-in", { state: { demo: true } })}
+              >
+                Click for Demo
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">

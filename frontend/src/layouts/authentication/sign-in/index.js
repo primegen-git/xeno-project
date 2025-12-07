@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -10,12 +11,23 @@ import axios from "axios";
 function Basic() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const location = useLocation();
 
-  const handleSignIn = async () => {
+  useEffect(() => {
+    if (location.state?.demo) {
+      setEmail("admin@123.com");
+      setPassword("admin123");
+      // Use a timeout to ensure state is updated before submitting, or just call login directly with values
+      // Better to call login directly with the values to avoid race conditions with state updates
+      handleSignIn("admin@123.com", "admin123");
+    }
+  }, [location.state]);
+
+  const handleSignIn = async (demoEmail, demoPassword) => {
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
-        email,
-        password,
+        email: demoEmail || email,
+        password: demoPassword || password,
       });
 
       if (response.data.success) {
