@@ -32,6 +32,21 @@ function Cover() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/demo`, {
+        withCredentials: true,
+      });
+
+      if (response.data.success) {
+        window.location.href = "/dashboard";
+      }
+    } catch (error) {
+      console.error("Demo login failed", error);
+      alert("Demo login failed. Please try again.");
+    }
+  };
+
   return (
     <CoverLayout>
       <Card>
@@ -119,7 +134,7 @@ function Cover() {
                 variant="outlined"
                 color="info"
                 fullWidth
-                onClick={() => navigate("/authentication/sign-in", { state: { demo: true } })}
+                onClick={handleDemoLogin}
               >
                 Click for Demo
               </MDButton>

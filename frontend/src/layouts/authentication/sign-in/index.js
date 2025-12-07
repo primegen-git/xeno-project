@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState } from "react";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -11,14 +10,8 @@ import axios from "axios";
 function Basic() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state?.demo) {
-      setEmail("admin@gmail.com");
-      setPassword("admin123");
-    }
-  }, [location.state]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignIn = async () => {
     try {
