@@ -70,7 +70,7 @@ def fetch_data_from_shopify(shop, resource, access_token):
         "X-Shopify-Access-Token": access_token,
     }
 
-    url = f"https://{shop}/admin/api/2024-10/{resource}.json"
+    url = f"https://{shop}/admin/api/2024-10/{resource}.json?limit=250"
 
     shopify_data = []
 
@@ -151,10 +151,7 @@ SHOPIFY_API_SECRET = os.getenv("SHOPIFY_API_SECRET", "")
 
 
 def verify_webhook(data: bytes, hmac_header: str) -> bool:
-    digest = hmac.new(
-        SHOPIFY_API_SECRET.encode("utf-8"), data, hashlib.sha256
-    ).digest()
+    digest = hmac.new(SHOPIFY_API_SECRET.encode("utf-8"), data, hashlib.sha256).digest()
     computed_hmac = base64.b64encode(digest).decode("utf-8")
 
     return hmac.compare_digest(computed_hmac, hmac_header)
-
