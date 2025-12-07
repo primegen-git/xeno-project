@@ -130,12 +130,7 @@ function Cover() {
               </MDButton>
             </MDBox>
             <MDBox mt={2} mb={1}>
-              <MDButton
-                variant="outlined"
-                color="info"
-                fullWidth
-                onClick={handleDemoLogin}
-              >
+              <MDButton variant="outlined" color="info" fullWidth onClick={handleDemoLogin}>
                 Click for Demo
               </MDButton>
             </MDBox>
