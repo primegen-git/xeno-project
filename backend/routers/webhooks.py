@@ -12,6 +12,7 @@ import models
 from pydantic_models import CustomerModel, OrderModel, ProductModel
 from utils import decode_jwt_token, verify_webhook
 import json
+from connection_manager import manager
 
 router = APIRouter()
 
@@ -326,6 +327,8 @@ async def save_order(req: Request, db: Session = Depends(get_db)):
     db.add(order_model)
     db.commit()
 
+    await manager.broadcast(tenant_id, "order_created")
+
 
 @router.post("/products/create")
 async def save_product(req: Request, db: Session = Depends(get_db)):
@@ -383,6 +386,8 @@ async def save_product(req: Request, db: Session = Depends(get_db)):
 
     db.add(product_model)
     db.commit()
+
+    await manager.broadcast(tenant_id, "product_created")
 
 
 @router.post("/customers/create")
@@ -442,6 +447,8 @@ async def customer_product(req: Request, db: Session = Depends(get_db)):
 
     db.add(customer_model)
     db.commit()
+
+    await manager.broadcast(tenant_id, "customer_created")
 
 
 @router.delete("/order")
