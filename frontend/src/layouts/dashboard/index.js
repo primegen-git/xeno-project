@@ -63,55 +63,77 @@ function Dashboard() {
     setOrdersData(ordersArray);
   };
 
+  const fetchData = async () => {
+    try {
+      const [
+        customersRes,
+        productsRes,
+        ordersRes,
+        topCustomersRes,
+        salesByMonthRes,
+        ordersByMonthRes,
+      ] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_customers`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_products`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_orders`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/top_customers`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/sales_by_month`, {
+          withCredentials: true,
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/orders_by_month`, {
+          withCredentials: true,
+        }),
+      ]);
+      setStats({
+        customers: customersRes.data,
+        products: productsRes.data,
+        orders: ordersRes.data,
+      });
+      setTopCustomers(topCustomersRes.data.data || []);
+      processGraphData(salesByMonthRes.data, ordersByMonthRes.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data", error);
+    }
+  };
+
   useEffect(() => {
     if (state?.data) {
       setStats(state.data.stats);
       setTopCustomers(state.data.topCustomers);
       processGraphData(state.data.salesByMonth, state.data.ordersByMonth);
     } else {
-      const fetchData = async () => {
-        try {
-          const [
-            customersRes,
-            productsRes,
-            ordersRes,
-            topCustomersRes,
-            salesByMonthRes,
-            ordersByMonthRes,
-          ] = await Promise.all([
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_customers`, {
-              withCredentials: true,
-            }),
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_products`, {
-              withCredentials: true,
-            }),
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/total_orders`, {
-              withCredentials: true,
-            }),
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/top_customers`, {
-              withCredentials: true,
-            }),
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/sales_by_month`, {
-              withCredentials: true,
-            }),
-            axios.get(`${process.env.REACT_APP_BACKEND_URL}/fetch/orders_by_month`, {
-              withCredentials: true,
-            }),
-          ]);
-          setStats({
-            customers: customersRes.data,
-            products: productsRes.data,
-            orders: ordersRes.data,
-          });
-          setTopCustomers(topCustomersRes.data.data || []);
-          processGraphData(salesByMonthRes.data, ordersByMonthRes.data);
-        } catch (error) {
-          console.error("Error fetching dashboard data", error);
-        }
-      };
       fetchData();
     }
   }, [state]);
+
+  useEffect(() => {
+    const eventSource = new EventSource(`${process.env.REACT_APP_BACKEND_URL}/events`, {
+      withCredentials: true,
+    });
+
+    eventSource.onmessage = (event) => {
+      const message = event.data;
+      if (message === "customer_created") {
+        setStats((prev) => ({ ...prev, customers: prev.customers + 1 }));
+      } else if (message === "product_created") {
+        setStats((prev) => ({ ...prev, products: prev.products + 1 }));
+      } else if (message === "order_created") {
+        fetchData();
+      }
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   const ordersChartData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
