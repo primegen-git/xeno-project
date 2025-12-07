@@ -81,6 +81,26 @@ async def login(payload: LoginModel, db: Session = Depends(get_db)):
     return response
 
 
+@router.get("/demo")
+async def demo(db: Session = Depends(get_db)):
+    existing_user = db.execute(
+        select(models.User).where(models.User.email == "admin@gmail.com")
+    ).scalar_one_or_none()
+
+    shop = existing_user.tenant.shop
+    tenant_id = existing_user.tenant_id
+
+    response = JSONResponse(content={"success": True, "shop": shop}, status_code=200)
+
+    encoded_jwt = create_jwt_token({"tenant_id": tenant_id})
+
+    response.set_cookie(
+        key="token", value=encoded_jwt, secure=True, samesite="none", httponly=True
+    )
+
+    return response
+
+
 @router.get("/logout")
 async def logout(res: Response):
     res.delete_cookie(key="token")
